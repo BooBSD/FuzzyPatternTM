@@ -40,6 +40,6 @@ const LF = 50
 # Training the TM model
 tm = TMClassifier(CLAUSES, T, R, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.
 # Batch inference is not implemented because of new algorithm.
-tm_best, _ = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, shuffle=true, verbose=1)
+tm_best, _ = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, shuffle=true, verbose=2)
 
 save(tm_best, "/tmp/tm_20.tm")
