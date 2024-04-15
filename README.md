@@ -4,7 +4,7 @@ Experimental version of Tsetlin Machine.
 The changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) are located in the following functions: `check_clause()` and `feedback!()`.
 Please, see the comments.
 
-<img width="698" alt="Experimental Tsetlin Machine MNIST accuracy 98.46%" src="https://github.com/BooBSD/FuzzyPatternsTM/assets/48304/9d109781-6667-45bd-b4a4-78e6ac609be4">
+<img width="698" alt="Experimental Tsetlin Machine MNIST accuracy 98.49%" src="https://github.com/BooBSD/FuzzyPatternsTM/assets/48304/5e002d7a-eeca-4e43-a7aa-38aed58fc7d3">
 
 Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 ---------------------------------------------------------------------------
