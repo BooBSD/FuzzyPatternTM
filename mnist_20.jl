@@ -47,8 +47,9 @@ save(tm_best, "/tmp/tm_20.tm")
 tm = load("/tmp/tm_20.tm")
 
 println("Testing different LF on trained model:\n")
-for i in 0:100
+lf = tm.LF
+for i in clamp(lf-10, 0, lf-10):lf+10
     tm.LF = i
     @printf("LF = %s, Accuracy: %.2f%%", i, accuracy(predict(tm, x_test), y_test) * 100)
-    println(LF == i ? "  <== This is original model LF" : "")
+    println(lf == i ? "  <== This is original model LF" : "")
 end
