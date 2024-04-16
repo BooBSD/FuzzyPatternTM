@@ -15,6 +15,12 @@ Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
   - Blazingly fast batch inference is broken. :(
   - Binomial combinatorial merging degrades model accuracy. :(
 
+Strange training behavior observed in large models
+--------------------------------------------------
+
+Large models (512+ clauses per class) experience accuracy plateaus after a certain number of epochs:
+
+<img width="706" alt="Accuracy stopped" src="https://github.com/BooBSD/FuzzyPatternsTM/assets/48304/acd0304a-9f7f-487a-b502-142cb4d3e05f">
 
 How to run MNIST and Fashion MNIST examples
 -------------------------------------------
