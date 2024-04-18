@@ -107,9 +107,8 @@ function check_clause(x::TMInput, literals::Vector{UInt16}, LF::Int64)::Int64
     @inbounds @simd for i in eachindex(literals)
         if c <= 0
             return 0
-        elseif !x[literals[i]]
-            c -= 1
         end
+        c -= !x[literals[i]]
     end
     return c
 end
