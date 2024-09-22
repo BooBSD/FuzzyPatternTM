@@ -31,17 +31,30 @@ x_test = [TMInput(vec([
     [x > 0.75 ? true : false for x in i];
 ])) for i in x_test]
 
-const EPOCHS = 2000
 const CLAUSES = 20
 const T = 16
 const R = 0.992
 const L = 150
 const LF = 50
 
+# const CLAUSES = 40
+# const T = 10
+# const R = 0.992
+# const L = 10
+# const LF = 5
+
+# const CLAUSES = 2000
+# const T = 100
+# const R = 0.997
+# const L = 20
+# const LF = 10
+
+const EPOCHS = 2000
+
 # Training the TM model
 tm = TMClassifier(CLAUSES, T, R, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.
 # Batch inference is not implemented because of new algorithm.
 best_tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, shuffle=true, verbose=1)
 
-save(best_tms[1][2], "/tmp/tm_20.tm")
-tm = load("/tmp/tm_20.tm")
+save(best_tms[1][2], "/tmp/fptm.tm")
+tm = load("/tmp/fptm.tm")
