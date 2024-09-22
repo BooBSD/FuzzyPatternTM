@@ -10,6 +10,8 @@ using Statistics: mean, median
 using Printf: @printf, @sprintf
 
 
+Base.exit_on_sigint(false)
+
 unzip(a) = (getfield.(a, x) for x in fieldnames(eltype(a)))
 
 
@@ -206,9 +208,10 @@ function train!(tm::TMClassifier, x::TMInput, y::Any; shuffle::Bool=true)
     else
         classes = keys(tm.clauses)
     end
+    feedback!(tm, tm.clauses[y], x, tm.clauses[y].positive_clauses, tm.clauses[y].negative_clauses, tm.clauses[y].positive_included_literals, tm.clauses[y].negative_included_literals, true)
     for cls in classes
         if cls != y
-            feedback!(tm, tm.clauses[y], x, tm.clauses[y].positive_clauses, tm.clauses[y].negative_clauses, tm.clauses[y].positive_included_literals, tm.clauses[y].negative_included_literals, true)
+#            feedback!(tm, tm.clauses[y], x, tm.clauses[y].positive_clauses, tm.clauses[y].negative_clauses, tm.clauses[y].positive_included_literals, tm.clauses[y].negative_included_literals, true)
             feedback!(tm, tm.clauses[cls], x, tm.clauses[cls].negative_clauses, tm.clauses[cls].positive_clauses, tm.clauses[cls].negative_included_literals, tm.clauses[cls].positive_included_literals, false)
         end
     end
@@ -229,13 +232,12 @@ function train!(tm::TMClassifier, X::Vector{TMInput}, Y::Vector; shuffle::Bool=t
 end
 
 
-function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vector, y_test::Vector, epochs::Int64; shuffle::Bool=true, verbose::Int=1, best_tms_size::Int64=16, best_tms_compile::Bool=true)::Tuple{TMClassifier, Vector{Tuple{Float64, AbstractTMClassifier}}}
+function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vector, y_test::Vector, epochs::Int64; shuffle::Bool=true, verbose::Int=1, best_tms_size::Int64=16, best_tms_compile::Bool=true)::Vector{Tuple{Float64, AbstractTMClassifier}}
     @assert best_tms_size in 1:2000
     if verbose > 0
         println("\nRunning in $(nthreads()) threads.")
         println("Accuracy over $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), LF: $(tm.LF), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)):\n")
     end
-    best_tm = (0.0, nothing)
     best_tms = Tuple{Float64, AbstractTMClassifier}[]
     all_time = @elapsed begin
         for i in 1:epochs
@@ -243,23 +245,20 @@ function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vect
             testing_time = @elapsed begin
                 acc = accuracy(predict(tm, x_test), y_test)
             end
-            if acc >= first(best_tm)
-                best_tm = (acc, deepcopy(tm))
-            end
             push!(best_tms, (acc, best_tms_compile ? compile(tm, verbose=verbose - 1) : deepcopy(tm)))
             sort!(best_tms, by=first, rev=true)
             best_tms = best_tms[1:clamp(length(best_tms), length(best_tms), best_tms_size)]
             if verbose > 0
-                @printf("#%s  Accuracy: %.2f%%  Best: %.2f%%  Training: %.3fs  Testing: %.3fs\n", i, acc * 100, best_tm[1] * 100, training_time, testing_time)
+                @printf("#%s  Accuracy: %.2f%%  Best: %.2f%%  Training: %.3fs  Testing: %.3fs\n", i, acc * 100, best_tms[1][1] * 100, training_time, testing_time)
             end
         end
     end
     if verbose > 0
         println("\nDone. $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), LF: $(tm.LF), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)).")
         elapsed = Time(0) + Second(floor(Int, all_time))
-        @printf("Time elapsed: %s. Best accuracy was: %.2f%%.\n\n", elapsed, best_tm[1] * 100)
+        @printf("Time elapsed: %s. Best accuracy was: %.2f%%.\n\n", elapsed, best_tms[1][1] * 100)
     end
-    return best_tm[2], best_tms
+    return best_tms
 end
 
 
