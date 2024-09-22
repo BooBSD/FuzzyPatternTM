@@ -18,6 +18,7 @@ unzip(a) = (getfield.(a, x) for x in fieldnames(eltype(a)))
 abstract type AbstractTATeam end
 abstract type AbstractTMClassifier end
 
+class_type(tm::AbstractTMClassifier)::DataType = typeof(tm).parameters[1]
 
 mutable struct TATeam <: AbstractTATeam
     const include_limit::UInt8
@@ -25,21 +26,29 @@ mutable struct TATeam <: AbstractTATeam
     const state_max::UInt8
     positive_clauses::Matrix{UInt8}
     negative_clauses::Matrix{UInt8}
+    positive_clauses_inverted::Matrix{UInt8}
+    negative_clauses_inverted::Matrix{UInt8}
     positive_included_literals::Vector{Vector{UInt16}}
     negative_included_literals::Vector{Vector{UInt16}}
+    positive_included_literals_inverted::Vector{Vector{UInt16}}
+    negative_included_literals_inverted::Vector{Vector{UInt16}}
     const clause_size::Int64
 
     function TATeam(clause_size::Int64, clauses_num::Int64, include_limit::Int64, state_min::Int64, state_max::Int64)
         positive_clauses = fill(UInt8(include_limit - 1), clause_size, floor(Int, clauses_num / 2))
         negative_clauses = fill(UInt8(include_limit - 1), clause_size, floor(Int, clauses_num / 2))
+        positive_clauses_inverted = fill(UInt8(include_limit - 1), clause_size, floor(Int, clauses_num / 2))
+        negative_clauses_inverted = fill(UInt8(include_limit - 1), clause_size, floor(Int, clauses_num / 2))
         positive_included_literals = fill([], floor(Int, clauses_num / 2))
         negative_included_literals = fill([], floor(Int, clauses_num / 2))
-        return new(include_limit, state_min, state_max, positive_clauses, negative_clauses, positive_included_literals, negative_included_literals, clause_size)
+        positive_included_literals_inverted = fill([], floor(Int, clauses_num / 2))
+        negative_included_literals_inverted = fill([], floor(Int, clauses_num / 2))
+        return new(include_limit, state_min, state_max, positive_clauses, negative_clauses, positive_clauses_inverted, negative_clauses_inverted, positive_included_literals, negative_included_literals, positive_included_literals_inverted, negative_included_literals_inverted, clause_size)
     end
 end
 
 
-mutable struct TMClassifier <: AbstractTMClassifier
+mutable struct TMClassifier{ClassType} <: AbstractTMClassifier
     clauses_num::Int64
     T::Int64
     R::Float64
@@ -48,10 +57,10 @@ mutable struct TMClassifier <: AbstractTMClassifier
     const include_limit::Int64
     const state_min::Int64
     const state_max::Int64
-    const clauses::Dict{Any, TATeam}
+    const clauses::Dict{ClassType, TATeam}
 
-    function TMClassifier(clauses_num::Int64, T::Int64, R::Float64; states_num::Int64=256, include_limit::Int64=128, L::Int64=16, LF::Int64=4)
-        return new(clauses_num, T, R, L, LF, include_limit, typemin(UInt8), states_num - 1, Dict())
+    function TMClassifier{ClassType}(clauses_num::Int64, T::Int64, R::Float64; states_num::Int64=256, include_limit::Int64=128, L::Int64=16, LF::Int64=4) where ClassType
+        return new{ClassType}(clauses_num, T, R, L, LF, include_limit, typemin(UInt8), states_num - 1, Dict())
     end
 end
 
@@ -59,42 +68,59 @@ end
 mutable struct TATeamCompiled <: AbstractTATeam
     positive_included_literals::Vector{Vector{UInt16}}
     negative_included_literals::Vector{Vector{UInt16}}
+    positive_included_literals_inverted::Vector{Vector{UInt16}}
+    negative_included_literals_inverted::Vector{Vector{UInt16}}
 
     function TATeamCompiled(clauses_num::Int64)
         positive_included_literals = fill([], floor(Int, clauses_num / 2))
         negative_included_literals = fill([], floor(Int, clauses_num / 2))
-        return new(positive_included_literals, negative_included_literals)
+        positive_included_literals_inverted = fill([], floor(Int, clauses_num / 2))
+        negative_included_literals_inverted = fill([], floor(Int, clauses_num / 2))
+        return new(positive_included_literals, negative_included_literals, positive_included_literals_inverted, negative_included_literals_inverted)
     end
 end
 
 
-struct TMClassifierCompiled <: AbstractTMClassifier
+struct TMClassifierCompiled{ClassType} <: AbstractTMClassifier
     clauses_num::Int64
     T::Int64
     R::Float64
     L::Int64
     LF::Int64
-    clauses::Dict{Any, TATeamCompiled}
+    clauses::Dict{ClassType, TATeamCompiled}
 
-    function TMClassifierCompiled(clauses_num::Int64, T::Int64, R::Float64, L::Int64, LF::Int64)
-        return new(clauses_num, T, R, L, LF, Dict())
+    function TMClassifierCompiled{ClassType}(clauses_num::Int64, T::Int64, R::Float64, L::Int64, LF::Int64) where ClassType
+        return new{ClassType}(clauses_num, T, R, L, LF, Dict())
     end
 end
 
 
 abstract type AbstractTMInput <: AbstractVector{Bool} end
 
+
 struct TMInput <: AbstractTMInput
     x::Vector{Bool}
 
-    function TMInput(x::Vector{Bool}; negate::Bool=true)
-        return negate ? new([x; [!_x for _x in x]]) : new(x)
+    function TMInput(x::Vector{Bool})
+        return new(x)
     end
 end
 
 Base.IndexStyle(::Type{<:TMInput}) = IndexLinear()
 Base.size(x::TMInput)::Tuple{Int64} = size(x.x)
 Base.getindex(x::TMInput, i::Int)::Bool = x.x[i]
+
+# struct TMInput <: AbstractTMInput
+#     x::BitVector
+
+#     function TMInput(x::Vector{Bool})
+#         return new(BitVector(x))
+#     end
+# end
+
+# Base.IndexStyle(::Type{<:TMInput}) = IndexLinear()
+# Base.size(x::TMInput)::Tuple{Int64} = size(x.x)
+# Base.getindex(x::TMInput, i::Int)::Bool = x.x[i]
 
 
 function initialize!(tm::TMClassifier, X::Vector{TMInput}, Y::Vector)
@@ -104,37 +130,47 @@ function initialize!(tm::TMClassifier, X::Vector{TMInput}, Y::Vector)
 end
 
 
-function check_clause(x::TMInput, literals::Vector{UInt16}, LF::Int64)::Int64
-    c::Int64 = 0 < length(literals) < LF ? length(literals) : LF
+function check_clause(x::TMInput, literals::Vector{UInt16}, literals_inverted::Vector{UInt16}, LF::Int64)::Int64
+    length_literals::Int64 = (length(literals) + length(literals_inverted))
+    c::Int64 = 0 < length_literals < LF ? length_literals : LF
     @inbounds @simd for i in eachindex(literals)
         if c <= 0
             return 0
         end
         c -= !x[literals[i]]
     end
+    @inbounds @simd for i in eachindex(literals_inverted)
+        if c <= 0
+            return 0
+        end
+        c -= x[literals_inverted[i]]
+    end
     return c
 end
 
 
 function vote(ta::AbstractTATeam, x::TMInput, LF::Int)::Tuple{Int64, Int64}
-    pos = sum(check_clause(x, ta.positive_included_literals[i], LF) for i in eachindex(ta.positive_included_literals))
-    neg = sum(check_clause(x, ta.negative_included_literals[i], LF) for i in eachindex(ta.negative_included_literals))
+    pos = sum(check_clause(x, ta.positive_included_literals[i], ta.positive_included_literals_inverted[i], LF) for i in eachindex(ta.positive_included_literals))
+    neg = sum(check_clause(x, ta.negative_included_literals[i], ta.negative_included_literals_inverted[i], LF) for i in eachindex(ta.negative_included_literals))
     return pos, neg
 end
 
 
-function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UInt8}, clauses2::Matrix{UInt8}, literals1::Vector{Vector{UInt16}}, literals2::Vector{Vector{UInt16}}, positive::Bool)
+function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UInt8}, clauses_inverted1::Matrix{UInt8}, clauses2::Matrix{UInt8}, clauses_inverted2::Matrix{UInt8}, literals1::Vector{Vector{UInt16}}, literals_inverted1::Vector{Vector{UInt16}}, literals2::Vector{Vector{UInt16}}, literals_inverted2::Vector{Vector{UInt16}}, positive::Bool)
     v::Int64 = clamp(-(vote(ta, x, tm.LF)...), -tm.T, tm.T)
     update::Float64 = (positive ? (tm.T - v) : (tm.T + v)) / (tm.T * 2)
 
     # Feedback 1
-    @inbounds for (j, c) in enumerate(eachcol(clauses1))
+    @inbounds for (j, (c, ci)) in enumerate(zip(eachcol(clauses1), eachcol(clauses_inverted1)))
         if (rand() < update)
-            if check_clause(x, literals1[j], tm.LF) > 0  # Small change: Added `> 0`
-                if (length(literals1[j]) <= tm.L)
+            if check_clause(x, literals1[j], literals_inverted1[j], tm.LF) > 0  # Small change: Added `> 0`
+                if (length(literals1[j]) + length(literals_inverted1[j]) <= tm.L)
                     @inbounds for i = 1:ta.clause_size
                         if (x[i] == true) && (c[i] < ta.state_max)
                             c[i] += one(UInt8)
+                        end
+                        if (x[i] == false) && (ci[i] < ta.state_max)
+                            ci[i] += one(UInt8)
                         end
                     end
                 end
@@ -143,6 +179,10 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
                     if (x[i] == false) && (c[i] < ta.include_limit) && (c[i] > ta.state_min)
                         c[i] -= one(UInt8)
                     end
+                    # No random
+                    if (x[i] == true) && (ci[i] < ta.include_limit) && (ci[i] > ta.state_min)
+                        ci[i] -= one(UInt8)
+                    end
                 end
             else
                 @inbounds for i = 1:ta.clause_size
@@ -150,22 +190,32 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
                     if (rand() > tm.R) && (c[i] > ta.state_min)
                         c[i] -= one(UInt8)
                     end
+                    # Here is one random only.
+                    if (rand() > tm.R) && (ci[i] > ta.state_min)
+                        ci[i] -= one(UInt8)
+                    end
                 end
             end
             literals1[j] = [@inbounds i for i = 1:ta.clause_size if c[i] >= ta.include_limit]
+            literals_inverted1[j] = [@inbounds i for i = 1:ta.clause_size if ci[i] >= ta.include_limit]
         end
     end
     # Feedback 2
-    @inbounds for (j, c) in enumerate(eachcol(clauses2))
+    @inbounds for (j, (c, ci)) in enumerate(zip(eachcol(clauses2), eachcol(clauses_inverted2)))
         if (rand() < update)
-            if check_clause(x, literals2[j], tm.LF) > 0  # Small change: Added `> 0`
+            if check_clause(x, literals2[j], literals_inverted2[j], tm.LF) > 0  # Small change: Added `> 0`
                 @inbounds for i = 1:ta.clause_size
                     # No random.
                     if (x[i] == false) && (c[i] < ta.include_limit)
                         c[i] += one(UInt8)
                     end
+                    # No random.
+                    if (x[i] == true) && (ci[i] < ta.include_limit)
+                        ci[i] += one(UInt8)
+                    end
                 end
                 literals2[j] = [@inbounds i for i = 1:ta.clause_size if c[i] >= ta.include_limit]
+                literals_inverted2[j] = [@inbounds i for i = 1:ta.clause_size if ci[i] >= ta.include_limit]
             end
         end
     end
@@ -187,7 +237,7 @@ end
 
 
 function predict(tm::AbstractTMClassifier, X::Vector{TMInput})::Vector
-    predicted::Vector = Vector{eltype(first(keys(tm.clauses)))}(undef, length(X))  # Predefine vector for @threads access
+    predicted::Vector = Vector{class_type(tm)}(undef, length(X))  # Predefine vector for @threads access
     @threads for i in eachindex(X)
         predicted[i] = predict(tm, X[i])
     end
@@ -195,8 +245,7 @@ function predict(tm::AbstractTMClassifier, X::Vector{TMInput})::Vector
 end
 
 
-function accuracy(predicted::Vector, Y::Vector)::Float64
-    @assert eltype(predicted) == eltype(Y)
+function accuracy(predicted::Vector{T}, Y::Vector{T})::Float64 where T
     @assert length(predicted) == length(Y)
     return sum(@inbounds 1 for (p, y) in zip(predicted, Y) if p == y; init=0) / length(Y)
 end
@@ -208,11 +257,11 @@ function train!(tm::TMClassifier, x::TMInput, y::Any; shuffle::Bool=true)
     else
         classes = keys(tm.clauses)
     end
-    feedback!(tm, tm.clauses[y], x, tm.clauses[y].positive_clauses, tm.clauses[y].negative_clauses, tm.clauses[y].positive_included_literals, tm.clauses[y].negative_included_literals, true)
+    feedback!(tm, tm.clauses[y], x, tm.clauses[y].positive_clauses, tm.clauses[y].positive_clauses_inverted, tm.clauses[y].negative_clauses, tm.clauses[y].negative_clauses_inverted, tm.clauses[y].positive_included_literals, tm.clauses[y].positive_included_literals_inverted, tm.clauses[y].negative_included_literals, tm.clauses[y].negative_included_literals_inverted, true)
     for cls in classes
         if cls != y
-#            feedback!(tm, tm.clauses[y], x, tm.clauses[y].positive_clauses, tm.clauses[y].negative_clauses, tm.clauses[y].positive_included_literals, tm.clauses[y].negative_included_literals, true)
-            feedback!(tm, tm.clauses[cls], x, tm.clauses[cls].negative_clauses, tm.clauses[cls].positive_clauses, tm.clauses[cls].negative_included_literals, tm.clauses[cls].positive_included_literals, false)
+#            feedback!(tm, tm.clauses[y], x, tm.clauses[y].positive_clauses, tm.clauses[y].positive_clauses_inverted, tm.clauses[y].negative_clauses, tm.clauses[y].negative_clauses_inverted, tm.clauses[y].positive_included_literals, tm.clauses[y].positive_included_literals_inverted, tm.clauses[y].negative_included_literals, tm.clauses[y].negative_included_literals_inverted, true)
+            feedback!(tm, tm.clauses[cls], x, tm.clauses[cls].negative_clauses, tm.clauses[cls].negative_clauses_inverted, tm.clauses[cls].positive_clauses, tm.clauses[cls].positive_clauses_inverted, tm.clauses[cls].negative_included_literals, tm.clauses[cls].negative_included_literals_inverted, tm.clauses[cls].positive_included_literals, tm.clauses[cls].positive_included_literals_inverted, false)
         end
     end
 end
@@ -267,21 +316,27 @@ function compile(tm::TMClassifier; verbose::Int=0)::TMClassifierCompiled
         print("Compiling model... ")
         pos = []
         neg = []
+        pos_inv = []
+        neg_inv = []
     end
-    all_time = @elapsed begin
-        tmc = TMClassifierCompiled(tm.clauses_num, tm.T, tm.R, tm.L, tm.LF)
+        all_time = @elapsed begin
+        tmc = TMClassifierCompiled{class_type(tm)}(tm.clauses_num, tm.T, tm.R, tm.L, tm.LF)
         for (cls, ta) in tm.clauses
             tmc.clauses[cls] = TATeamCompiled(tm.clauses_num)
-            for (j, c) in enumerate(eachcol(ta.positive_clauses))
+            for (j, (c, ci)) in enumerate(zip(eachcol(ta.positive_clauses), eachcol(ta.positive_clauses_inverted)))
                 tmc.clauses[cls].positive_included_literals[j] = [i for i = 1:ta.clause_size if c[i] >= ta.include_limit]
+                tmc.clauses[cls].positive_included_literals_inverted[j] = [i for i = 1:ta.clause_size if ci[i] >= ta.include_limit]
                 if verbose > 0
                     append!(pos, length(tmc.clauses[cls].positive_included_literals[j]))
+                    append!(pos_inv, length(tmc.clauses[cls].positive_included_literals_inverted[j]))
                 end
             end
-            for (j, c) in enumerate(eachcol(ta.negative_clauses))
+            for (j, (c, ci)) in enumerate(zip(eachcol(ta.negative_clauses), eachcol(ta.negative_clauses_inverted)))
                 tmc.clauses[cls].negative_included_literals[j] = [i for i = 1:ta.clause_size if c[i] >= ta.include_limit]
+                tmc.clauses[cls].negative_included_literals_inverted[j] = [i for i = 1:ta.clause_size if ci[i] >= ta.include_limit]
                 if verbose > 0
                     append!(neg, length(tmc.clauses[cls].negative_included_literals[j]))
+                    append!(neg_inv, length(tmc.clauses[cls].negative_included_literals_inverted[j]))
                 end
             end
         end
@@ -290,18 +345,24 @@ function compile(tm::TMClassifier; verbose::Int=0)::TMClassifierCompiled
         @printf("Done. Time elapsed: %.3fs\n", all_time)
         pos_sum = sum(pos)
         neg_sum = sum(neg)
-        println("Literals:")
-        @printf("  Positive: %s, Negative: %s, Total: %s, Per clause: %.2f\n", pos_sum, neg_sum, (pos_sum + neg_sum), (pos_sum + neg_sum) / (length(tm.clauses) * tm.clauses_num))
-        @printf("  Positive min: %s, max: %s, mean: %s, median: %s\n", minimum(pos), maximum(pos), mean(pos), median(pos))
-        @printf("  Negative min: %s, max: %s, mean: %s, median: %s\n\n", minimum(neg), maximum(neg), mean(neg), median(neg))
+        pos_inv_sum = sum(pos_inv)
+        neg_inv_sum = sum(neg_inv)
+        total = (pos_sum + neg_sum + pos_inv_sum + neg_inv_sum)
+        println("Included literals:")
+        @printf("  Positive: %s, Negative: %s, Positive Inverted: %s, Negative Inverted: %s, Total: %s, Per clause: %.2f\n", pos_sum, neg_sum, pos_inv_sum, neg_inv_sum, total, total / (length(tm.clauses) * tm.clauses_num))
+        @printf("  Positive min: %s, max: %s, mean: %.2f, median: %.2f\n", minimum(pos), maximum(pos), mean(pos), median(pos))
+        @printf("  Negative min: %s, max: %s, mean: %.2f, median: %.2f\n", minimum(neg), maximum(neg), mean(neg), median(neg))
+        @printf("  Positive Inverted min: %s, max: %s, mean: %.2f, median: %.2f\n", minimum(pos_inv), maximum(pos_inv), mean(pos_inv), median(pos_inv))
+        @printf("  Negative Inverted min: %s, max: %s, mean: %.2f, median: %.2f\n", minimum(neg_inv), maximum(neg_inv), mean(neg_inv), median(neg_inv))
     end
     return tmc
 end
 
 
-function compile(tms::Vector{Tuple{Float64, AbstractTMClassifier}})::Vector{Tuple{Float64, TMClassifierCompiled}}
-    return [(acc, compile(tm, verbose=0)) for (acc, tm) in tms]
+function compile(tms::Vector{Tuple{AbstractTMClassifier, Float64}})::Vector{Tuple{TMClassifierCompiled, Float64}}
+    return [(compile(tm, verbose=0), acc) for (tm, acc) in tms]
 end
+
 
 
 function save(tm::Union{AbstractTMClassifier, Tuple{Float64, AbstractTMClassifier}, Vector{Tuple{Float64, AbstractTMClassifier}}}, filepath::AbstractString)

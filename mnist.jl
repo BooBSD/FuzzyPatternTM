@@ -31,6 +31,10 @@ x_test = [TMInput(vec([
     [x > 0.75 ? true : false for x in i];
 ])) for i in x_test]
 
+# Convert y_train and y_test to the Int8 type to save memory
+y_train = Int8.(y_train)
+y_test = Int8.(y_test)
+
 const CLAUSES = 20
 const T = 16
 const R = 0.992
@@ -52,7 +56,7 @@ const LF = 50
 const EPOCHS = 2000
 
 # Training the TM model
-tm = TMClassifier(CLAUSES, T, R, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.
+tm = TMClassifier{eltype(y_train)}(CLAUSES, T, R, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.
 # Batch inference is not implemented because of new algorithm.
 best_tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, shuffle=true, verbose=1)
 
