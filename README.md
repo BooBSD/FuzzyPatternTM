@@ -6,13 +6,13 @@ Please, see the comments.
 
 Here is the tiny 20-clause model training result for the `MNIST` dataset:
 
-<img width="698" alt="Experimental Tsetlin Machine MNIST accuracy 98.52%" src="https://github.com/user-attachments/assets/f4b52bd1-4700-450c-95f5-984247a73e02">
+<img width="698" alt="Experimental Fuzzy Patterns Tsetlin Machine MNIST accuracy 98.56%" src="https://github.com/user-attachments/assets/05768a26-036a-40ce-b548-95925e96a01d">
 
 Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 ---------------------------------------------------------------------------
 
   - New hyperparameter `LF` that sets the number of literal misses allowed for the clause.
-  - Good accuracy and learning speed for small models. Achieves up to **98.52%** accuracy on **MNIST** and **89.67%** accuracy on **Fashion MNIST** using a model with **20 clauses** per class (10 positive + 10 negative). The original Tsetlin Machine from 2018 achieves approximately the same accuracy but with **2000** clauses per class.
+  - Good accuracy and learning speed for small models. Achieves up to **98.56%** peak accuracy on **MNIST** and **89.67%** peak accuracy on **Fashion MNIST** using a model with **20 clauses** per class (10 positive + 10 negative). The original Tsetlin Machine from 2018 achieves approximately the same accuracy but with **2000** clauses per class.
   - The accuracy and learning speed of large models (2048 clauses per class) are not very good. We need to delve deeper into this issue.
   - Blazingly fast batch inference is broken. :(
   - Binomial combinatorial merging degrades model accuracy. :(
