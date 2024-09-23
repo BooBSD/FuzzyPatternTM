@@ -4,7 +4,7 @@ Experimental version of Tsetlin Machine.
 The changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) are located in the following functions: `check_clause()`, `feedback!()` and `train!()`.
 Please, see the comments.
 
-Here is the tiny 20-clause model training result for the `MNIST` dataset:
+Here is the tiny **20-clause** model training result for the `MNIST` dataset:
 
 <img width="698" alt="Experimental Fuzzy Patterns Tsetlin Machine MNIST accuracy 98.56%" src="https://github.com/user-attachments/assets/05768a26-036a-40ce-b548-95925e96a01d">
 
