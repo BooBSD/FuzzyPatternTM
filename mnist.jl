@@ -9,7 +9,7 @@ end
 
 using Printf: @printf
 using MLDatasets: MNIST, FashionMNIST
-using .FuzzyPatternsTM: TMInput, TMClassifier, train!, predict, accuracy, save, load, unzip
+using .FuzzyPatternsTM: TMInput, TMClassifier, train!, predict, accuracy, save, load, unzip, booleanize, combine, optimize!, benchmark
 
 
 x_train, y_train = unzip([MNIST(:train)...])
@@ -18,18 +18,8 @@ x_test, y_test = unzip([MNIST(:test)...])
 # x_test, y_test = unzip([FashionMNIST(:test)...])
 
 # 4-bit booleanization
-x_train = [TMInput(vec([
-    [x > 0 ? true : false for x in i];
-    [x > 0.25 ? true : false for x in i];
-    [x > 0.5 ? true : false for x in i];
-    [x > 0.75 ? true : false for x in i];
-])) for i in x_train]
-x_test = [TMInput(vec([
-    [x > 0 ? true : false for x in i];
-    [x > 0.25 ? true : false for x in i];
-    [x > 0.5 ? true : false for x in i];
-    [x > 0.75 ? true : false for x in i];
-])) for i in x_test]
+x_train = [booleanize(x, 0, 0.25, 0.5, 0.75) for x in x_train]
+x_test = [booleanize(x, 0, 0.25, 0.5, 0.75) for x in x_test]
 
 # Convert y_train and y_test to the Int8 type to save memory
 y_train = Int8.(y_train)
@@ -54,11 +44,24 @@ const LF = 50
 # const LF = 10
 
 const EPOCHS = 2000
+const best_tms_size = 512
 
 # Training the TM model
 tm = TMClassifier{eltype(y_train)}(CLAUSES, T, R, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.
 # Batch inference is not implemented because of new algorithm.
-best_tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, shuffle=true, verbose=1)
+tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, best_tms_size=best_tms_size, shuffle=true, batch=false, verbose=1)
 
-save(best_tms[1][2], "/tmp/fptm.tm")
-tm = load("/tmp/fptm.tm")
+save(tms, "/tmp/tms.tm")
+tms = load("/tmp/tms.tm")
+
+# Binomial combinatorial merge of trained TM models
+tm, _ = combine(tms, 2, x_test, y_test, batch=false)
+save(tm, "/tmp/tm2.tm")
+tm = load("/tmp/tm2.tm")
+
+# Optimizing the TM model
+optimize!(tm, x_train)
+save(tm, "/tmp/tm_optimized.tm")
+tm_opt = load("/tmp/tm_optimized.tm")
+
+benchmark(tm_opt, x_test, y_test, 5000, batch=false, warmup=true)

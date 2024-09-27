@@ -98,11 +98,23 @@ end
 abstract type AbstractTMInput <: AbstractVector{Bool} end
 
 
-struct TMInput <: AbstractTMInput
-    x::Vector{Bool}
+# struct TMInput <: AbstractTMInput
+#     x::Vector{Bool}
 
-    function TMInput(x::Vector{Bool})
-        return new(x)
+#     function TMInput(x::AbstractArray{Bool})
+#         return new(vec(x))
+#     end
+# end
+
+# Base.IndexStyle(::Type{<:TMInput}) = IndexLinear()
+# Base.size(x::TMInput)::Tuple{Int64} = size(x.x)
+# Base.getindex(x::TMInput, i::Int)::Bool = x.x[i]
+
+struct TMInput <: AbstractTMInput
+    x::BitVector
+
+    function TMInput(x::AbstractArray{Bool})
+        return new(BitVector(vec(x)))
     end
 end
 
@@ -110,17 +122,10 @@ Base.IndexStyle(::Type{<:TMInput}) = IndexLinear()
 Base.size(x::TMInput)::Tuple{Int64} = size(x.x)
 Base.getindex(x::TMInput, i::Int)::Bool = x.x[i]
 
-# struct TMInput <: AbstractTMInput
-#     x::BitVector
 
-#     function TMInput(x::Vector{Bool})
-#         return new(BitVector(x))
-#     end
-# end
-
-# Base.IndexStyle(::Type{<:TMInput}) = IndexLinear()
-# Base.size(x::TMInput)::Tuple{Int64} = size(x.x)
-# Base.getindex(x::TMInput, i::Int)::Bool = x.x[i]
+function booleanize(x::AbstractArray{Float32}, thresholds::Number...)::TMInput
+    return TMInput(vcat((x .> t for t in thresholds)...))
+end
 
 
 function initialize!(tm::TMClassifier, X::Vector{TMInput}, Y::Vector)
@@ -281,31 +286,34 @@ function train!(tm::TMClassifier, X::Vector{TMInput}, Y::Vector; shuffle::Bool=t
 end
 
 
-function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vector, y_test::Vector, epochs::Int64; shuffle::Bool=true, verbose::Int=1, best_tms_size::Int64=16, best_tms_compile::Bool=true)::Vector{Tuple{Float64, AbstractTMClassifier}}
+function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vector, y_test::Vector, epochs::Int64; batch::Bool=true, shuffle::Bool=true, verbose::Int=1, best_tms_size::Int64=16, best_tms_compile::Bool=true)::Vector{Tuple{AbstractTMClassifier, Float64}}
     @assert best_tms_size in 1:2000
+    if batch
+        x_test = batches(x_test)
+    end
     if verbose > 0
         println("\nRunning in $(nthreads()) threads.")
-        println("Accuracy over $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), LF: $(tm.LF), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)):\n")
+        println("Accuracy over $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)):\n")
     end
-    best_tms = Tuple{Float64, AbstractTMClassifier}[]
+    best_tms = Tuple{AbstractTMClassifier, Float64}[]
     all_time = @elapsed begin
         for i in 1:epochs
             training_time = @elapsed train!(tm, x_train, y_train, shuffle=shuffle)
             testing_time = @elapsed begin
                 acc = accuracy(predict(tm, x_test), y_test)
             end
-            push!(best_tms, (acc, best_tms_compile ? compile(tm, verbose=verbose - 1) : deepcopy(tm)))
-            sort!(best_tms, by=first, rev=true)
+            push!(best_tms, (best_tms_compile ? compile(tm, verbose=verbose - 1) : deepcopy(tm), acc))
+            sort!(best_tms, by=last, rev=true)
             best_tms = best_tms[1:clamp(length(best_tms), length(best_tms), best_tms_size)]
             if verbose > 0
-                @printf("#%s  Accuracy: %.2f%%  Best: %.2f%%  Training: %.3fs  Testing: %.3fs\n", i, acc * 100, best_tms[1][1] * 100, training_time, testing_time)
+                @printf("#%s  Accuracy: %.2f%%  Best: %.2f%%  Training: %.3fs  Testing: %.3fs\n", i, acc * 100, best_tms[1][2] * 100, training_time, testing_time)
             end
         end
     end
     if verbose > 0
-        println("\nDone. $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), LF: $(tm.LF), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)).")
+        println("\nDone. $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)).")
         elapsed = Time(0) + Second(floor(Int, all_time))
-        @printf("Time elapsed: %s. Best accuracy was: %.2f%%.\n\n", elapsed, best_tms[1][1] * 100)
+        @printf("Time elapsed: %s. Best accuracy was: %.2f%%.\n\n", elapsed, best_tms[1][2] * 100)
     end
     return best_tms
 end
@@ -364,8 +372,35 @@ function compile(tms::Vector{Tuple{AbstractTMClassifier, Float64}})::Vector{Tupl
 end
 
 
+function optimize!(tm::AbstractTMClassifier, X::Vector{TMInput}; verbose::Int=0)
+    if verbose > 0
+        print("Optimizing model... ")
+    end
+    all_time = @elapsed begin
 
-function save(tm::Union{AbstractTMClassifier, Tuple{Float64, AbstractTMClassifier}, Vector{Tuple{Float64, AbstractTMClassifier}}}, filepath::AbstractString)
+        for (cls, ta) in tm.clauses
+            for (check, included_literals) in ((false, ta.positive_included_literals), (false, ta.negative_included_literals), (true, ta.positive_included_literals_inverted), (true, ta.negative_included_literals_inverted))
+                @threads for c in included_literals
+                    d = Dict(k => 0 for k in c)
+                    for x in X
+                        for k in keys(d)
+                            if x[k] == check
+                                d[k] += 1
+                            end
+                        end
+                    end
+                    sort!(c, lt=(a, b) -> d[a] > d[b])
+                end
+            end
+        end
+    end
+    if verbose > 0
+        @printf("Done. Time elapsed: %.3fs\n", all_time)
+    end
+end
+
+
+function save(tm::Union{AbstractTMClassifier, Tuple{AbstractTMClassifier, Float64}, Vector{Tuple{AbstractTMClassifier, Float64}}}, filepath::AbstractString)
     if !endswith(filepath, ".tm")
         filepath = string(filepath, ".tm")
     end
@@ -375,6 +410,7 @@ function save(tm::Union{AbstractTMClassifier, Tuple{Float64, AbstractTMClassifie
 end
 
 
+
 function load(filepath::AbstractString)
     if !endswith(filepath, ".tm")
         filepath = string(filepath, ".tm")
@@ -382,6 +418,192 @@ function load(filepath::AbstractString)
     print("Loading model from $(filepath)... ")
     println("Done.\n")
     return Serialization.deserialize(filepath)
+end
+
+
+function merge!(new_tm::TMClassifier, tms::TMClassifier...; algo::Symbol=:merge)
+    @assert algo in (:merge, :join)
+    @threads for cls in collect(keys(new_tm.clauses))
+        if algo == :merge
+            new_tm.clauses[cls].positive_clauses = mix((tm.clauses[cls].positive_clauses for tm in tms)...)
+            new_tm.clauses[cls].negative_clauses = mix((tm.clauses[cls].negative_clauses for tm in tms)...)
+            new_tm.clauses[cls].positive_clauses_inverted = mix((tm.clauses[cls].positive_clauses_inverted for tm in tms)...)
+            new_tm.clauses[cls].negative_clauses_inverted = mix((tm.clauses[cls].negative_clauses_inverted for tm in tms)...)
+        elseif algo == :join
+            new_tm.clauses[cls].positive_clauses = hcat((tm.clauses[cls].positive_clauses for tm in tms)...)
+            new_tm.clauses[cls].negative_clauses = hcat((tm.clauses[cls].negative_clauses for tm in tms)...)
+            new_tm.clauses[cls].positive_clauses_inverted = hcat((tm.clauses[cls].positive_clauses_inverted for tm in tms)...)
+            new_tm.clauses[cls].negative_clauses_inverted = hcat((tm.clauses[cls].negative_clauses_inverted for tm in tms)...)
+
+            clauses_num_half = size(new_tm.clauses[cls].positive_clauses, 2)
+            new_tm.clauses_num = clauses_num_half * 2
+
+            new_tm.clauses[cls].positive_included_literals = fill([], floor(Int, clauses_num_half))
+            new_tm.clauses[cls].negative_included_literals = fill([], floor(Int, clauses_num_half))
+            new_tm.clauses[cls].positive_included_literals_inverted = fill([], floor(Int, clauses_num_half))
+            new_tm.clauses[cls].negative_included_literals_inverted = fill([], floor(Int, clauses_num_half))
+        end
+        @inbounds for (j, c) in enumerate(eachcol(new_tm.clauses[cls].positive_clauses))
+            new_tm.clauses[cls].positive_included_literals[j] = [@inbounds i for i = 1:new_tm.clauses[cls].clause_size if c[i] >= new_tm.clauses[cls].include_limit]
+        end
+        @inbounds for (j, c) in enumerate(eachcol(new_tm.clauses[cls].negative_clauses))
+            new_tm.clauses[cls].negative_included_literals[j] = [@inbounds i for i = 1:new_tm.clauses[cls].clause_size if c[i] >= new_tm.clauses[cls].include_limit]
+        end
+        @inbounds for (j, c) in enumerate(eachcol(new_tm.clauses[cls].positive_clauses_inverted))
+            new_tm.clauses[cls].positive_included_literals_inverted[j] = [@inbounds i for i = 1:new_tm.clauses[cls].clause_size if c[i] >= new_tm.clauses[cls].include_limit]
+        end
+        @inbounds for (j, c) in enumerate(eachcol(new_tm.clauses[cls].negative_clauses_inverted))
+            new_tm.clauses[cls].negative_included_literals_inverted[j] = [@inbounds i for i = 1:new_tm.clauses[cls].clause_size if c[i] >= new_tm.clauses[cls].include_limit]
+        end
+    end
+end
+
+
+function merge!(new_tm::TMClassifierCompiled, tms::TMClassifierCompiled...; algo::Symbol=:merge)
+    @assert algo in (:merge, :join)
+    @threads for cls in collect(keys(new_tm.clauses))
+        if algo == :merge
+            new_tm.clauses[cls].positive_included_literals = [sort(collect(Set(vcat(ls...)))) for ls in zip((tm.clauses[cls].positive_included_literals for tm in tms)...)]
+            new_tm.clauses[cls].negative_included_literals = [sort(collect(Set(vcat(ls...)))) for ls in zip((tm.clauses[cls].negative_included_literals for tm in tms)...)]
+            new_tm.clauses[cls].positive_included_literals_inverted = [sort(collect(Set(vcat(ls...)))) for ls in zip((tm.clauses[cls].positive_included_literals_inverted for tm in tms)...)]
+            new_tm.clauses[cls].negative_included_literals_inverted = [sort(collect(Set(vcat(ls...)))) for ls in zip((tm.clauses[cls].negative_included_literals_inverted for tm in tms)...)]
+        elseif algo == :join
+            new_tm.clauses[cls].positive_included_literals = sort(collect(Set(vcat((tm.clauses[cls].positive_included_literals for tm in tms)...))))
+            new_tm.clauses[cls].negative_included_literals = sort(collect(Set(vcat((tm.clauses[cls].negative_included_literals for tm in tms)...))))
+            new_tm.clauses[cls].positive_included_literals_inverted = sort(collect(Set(vcat((tm.clauses[cls].positive_included_literals_inverted for tm in tms)...))))
+            new_tm.clauses[cls].negative_included_literals_inverted = sort(collect(Set(vcat((tm.clauses[cls].negative_included_literals_inverted for tm in tms)...))))
+        end
+    end
+end
+
+
+function merge(tms::AbstractTMClassifier...; algo::Symbol=:merge)::AbstractTMClassifier
+    @assert algo in (:merge, :join)
+    new_tm = deepcopy(first(tms))
+    merge!(new_tm, tms...; algo=algo)
+    return new_tm
+end
+
+
+function combine(tms, k::Int64, x_test::Vector, y_test::Vector; algo::Symbol=:merge, batch::Bool=true)::Tuple{AbstractTMClassifier, Float64}
+    @assert algo in (:merge, :join)
+    if batch
+        x_test = batches(x_test)
+    end
+    tm = deepcopy(tms[1][1])
+    best = (nothing, 0.0)
+    combinations = Set(s for s in (Set(c) for c in Iterators.product((1:length(tms) for _ in 1:k)...)) if length(s) == k)
+    println("Trying to find best combine accuracy among $(length(combinations)) of $(k) combined models (algo: $(algo), batch size: $(length(tms)))...")
+    all_time = @elapsed begin
+        for (i, c) in enumerate(combinations)
+            merging_time = @elapsed begin
+                merge!(tm, (tms[t][1] for t in c)...; algo=algo)
+            end
+            testing_time = @elapsed begin
+                acc = accuracy(predict(tm, x_test), y_test)
+            end
+            if acc >= last(best)
+                best = (deepcopy(tm), acc)
+            end
+            @printf("#%s  Accuracy: %s = %.2f%%  Best: %.2f%%  Merging: %.3fs  Testing: %.3fs\n", i, join([@sprintf("%.2f%%", tms[t][2] * 100) for t in c], " + "), acc * 100, last(best) * 100, merging_time, testing_time)
+        end
+    end
+    elapsed = Time(0) + Second(floor(Int, all_time))
+    @printf("Time elapsed: %s. Best %s combined models accuracy (algo: %s, batch size: %s): %.2f%%.\n\n", elapsed, k, algo, length(tms), last(best) * 100)
+    return best
+end
+
+
+function benchmark(tm::AbstractTMClassifier, X::Vector{TMInput}, Y::Vector, loops::Int64; batch::Bool=true, warmup::Bool=true)
+    @printf("CPU: %s\n", Sys.cpu_info()[1].model)
+    @printf("Running in %s threads.\n", nthreads())
+    print("Preparing input data for benchmark... ")
+    GC.gc()
+    prepare_time = @elapsed begin
+        # Permutate in random order
+        len = length(Y)
+        perm = Vector{Int32}(undef, len * loops)
+        i::Int64 = 0
+        @inbounds @fastmath for _ in 1:loops
+            @inbounds @fastmath for r in Random.shuffle(UnitRange{Int32}(1:len))
+                i += 1
+                perm[i] = r
+            end
+        end
+        # Multiply X and Y by loops times
+        if batch
+            X = batches(X[perm])
+        else
+            _X::Vector{TMInput} = Vector{TMInput}(undef, length(perm))
+            @threads for i in eachindex(_X)
+                _X[i] = deepcopy(X[perm[i]])
+            end
+            X = _X
+        end
+        Y = Y[perm]
+    end
+    @printf("Done. Elapsed %.3f seconds.\n", prepare_time)
+    GC.gc()
+    X_size = Base.summarysize(X[1]) * length(X)
+    if warmup
+        print("Warm-up started... ")
+        warmup_time = @elapsed begin
+            predict(tm, X)
+        end
+        @printf("Done. Elapsed %.3f seconds.\n", warmup_time)
+    end
+    model_type = last(split(string(typeof(tm)), '.'))
+    if batch
+        @printf("Benchmark for %s model in batch mode (batch size = %s) started... ", model_type, ndigits(typemax(typeof(X[1][1])), base=2))
+    else
+        @printf("Benchmark for %s model started... ", model_type)
+    end
+    GC.gc()
+    GC.enable(false)
+    bench_time = @elapsed begin
+        predicted = predict(tm, X)
+    end
+    println("Done.")
+    GC.enable(true)
+    if batch
+        predicted = vcat(predicted...)
+    end
+    @printf("%s predictions processed in %.3f seconds.\n", length(predicted), bench_time)
+    @printf("Performance: %s predictions per second.\n", floor(Int, length(predicted) / bench_time))
+    @printf("Throughput: %.3f GB/s.\n", X_size / 1024^3 / bench_time)
+    @printf("Input data size: %.3f GB.\n", X_size / 1024^3)
+    @printf("Parameters during training: %s.\n", tm.clauses_num * length(keys(tm.clauses)) * length(X[1]) * 2)
+    @printf("Parameters after training and compilation: %s.\n", diff_count(tm)[1])
+    @printf("Accuracy: %.2f%%.\n\n", accuracy(predicted, Y) * 100)
+end
+
+
+function diff_count(tm::AbstractTMClassifier)::Tuple{Int64, Int64, Int64, Int64, Int64}
+    pos = []
+    pos_inv = []
+    neg = []
+    neg_inv = []
+    for (k, clauses) in tm.clauses
+        for c in clauses.positive_included_literals
+            append!(pos, [c])
+        end
+        for c in clauses.negative_included_literals
+            append!(neg, [c])
+        end
+        for c in clauses.positive_included_literals_inverted
+            append!(pos_inv, [c])
+        end
+        for c in clauses.negative_included_literals_inverted
+            append!(neg_inv, [c])
+        end
+    end
+    pos = vcat(pos...)
+    neg = vcat(neg...)
+    pos_inv = vcat(pos_inv...)
+    neg_inv = vcat(neg_inv...)
+    count = length(pos) + length(neg) + length(pos_inv) + length(neg_inv)
+    # FIXME: irrelevant info
+    return count, length(union(pos, neg)), length(intersect(pos, neg)), length(pos) - length(Set(pos)), length(neg) - length(Set(neg))
 end
 
 end # module
