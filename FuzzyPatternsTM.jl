@@ -14,6 +14,7 @@ Base.exit_on_sigint(false)
 
 unzip(a) = (getfield.(a, x) for x in fieldnames(eltype(a)))
 
+isbitset(x::UInt64, n::UInt64)::Bool = (x >> n) & one(UInt64)
 
 abstract type AbstractTATeam end
 abstract type AbstractTMClassifier end
@@ -128,6 +129,51 @@ function booleanize(x::AbstractArray{Float32}, thresholds::Number...)::TMInput
 end
 
 
+function bits_2_word(X::Vector{TMInput}, j::Int64, size::Int64)::UInt64
+    ex::UInt64 = zero(UInt64)
+    @inbounds for i in 1:size
+        ex *= 2
+        ex += X[i].x[j]
+    end
+    if size < 64
+        @inbounds for i in size+1:64
+            ex *= 2
+            ex += true
+        end
+    end
+    return bitreverse(ex)
+end
+
+
+struct TMInputBatch <: AbstractTMInput
+    x::Vector{UInt64}
+    batch_size::Int64
+
+    function TMInputBatch(X::Vector{TMInput})
+        @assert 1 <= length(X) <= 64 "Size of input Vector must be in 1..64."
+        if length(X) == 64
+            return new([bits_2_word(X, j, 64) for j in 1:length(X[1])], 64)
+        else
+            return new([bits_2_word(X, j, length(X) < 64 ? length(X) : 64) for j in 1:length(X[1])], length(X))
+        end
+    end
+end
+
+Base.IndexStyle(::Type{<:TMInputBatch}) = IndexLinear()
+Base.length(x::TMInputBatch)::Int64 = length(x.x)
+Base.getindex(x::TMInputBatch, i::Int)::UInt64 = x.x[i]
+
+
+function batches(X::Vector{TMInput})::Vector{TMInputBatch}
+    _d, _r = divrem(length(X), 64)
+    _X::Vector{TMInputBatch} = Vector{TMInputBatch}(undef, _r == 0 ? _d : _d + 1)  # Predefine vector for @threads access
+    @threads for (j, i) in collect(enumerate(1:64:length(X)))
+        _X[j] = (j <= _d) ? TMInputBatch(X[i:i+63]) : TMInputBatch(X[i:i+_r - 1])
+    end
+    return _X
+end
+
+
 function initialize!(tm::TMClassifier, X::Vector{TMInput}, Y::Vector)
     for cls in collect(Set(Y))
         tm.clauses[cls] = TATeam(length(first(X)), tm.clauses_num, tm.include_limit, tm.state_min, tm.state_max)
@@ -142,13 +188,13 @@ function check_clause(x::TMInput, literals::Vector{UInt16}, literals_inverted::V
         if c <= 0
             return 0
         end
-        c -= !x[literals[i]]
+        c -= !x.x[literals[i]]
     end
     @inbounds @simd for i in eachindex(literals_inverted)
         if c <= 0
             return 0
         end
-        c -= x[literals_inverted[i]]
+        c -= x.x[literals_inverted[i]]
     end
     return c
 end
@@ -158,6 +204,53 @@ function vote(ta::AbstractTATeam, x::TMInput, LF::Int)::Tuple{Int64, Int64}
     pos = sum(check_clause(x, ta.positive_included_literals[i], ta.positive_included_literals_inverted[i], LF) for i in eachindex(ta.positive_included_literals))
     neg = sum(check_clause(x, ta.negative_included_literals[i], ta.negative_included_literals_inverted[i], LF) for i in eachindex(ta.negative_included_literals))
     return pos, neg
+end
+
+
+function check_clause(x::TMInputBatch, literals::Vector{UInt16}, literals_inverted::Vector{UInt16}, LF::Int64, b::Vector{Int64})#::Vector{Int64}
+    length_literals::Int64 = (length(literals) + length(literals_inverted))
+    c::Int64 = 0 < length_literals < LF ? length_literals : LF
+#    b::Vector{Int64} = fill(c, 64)
+    fill!(b, c)
+    @inbounds for l in eachindex(literals)
+        ll::UInt64 = ~x.x[literals[l]]
+        @inbounds @simd for i in 1:64
+            b[i] -= isbitset(ll, UInt64(i - 1))
+        end
+    end
+    @inbounds for l in eachindex(literals_inverted)
+        ll::UInt64 = x.x[literals_inverted[l]]
+        @inbounds @simd for i in 1:64
+            b[i] -= isbitset(ll, UInt64(i - 1))
+        end
+    end
+    @inbounds for i in eachindex(b)
+        if b[i] < 0
+            b[i] = 0
+        end
+    end
+#    return [i < 0 ? 0 : i for i in b]
+#    return b
+end
+
+
+function vote(ta::AbstractTATeam, x::TMInputBatch, LF::Int64, votes::Vector{Int64}, b::Vector{Int64})::Vector{Int64}
+    @inbounds for (pil, piil, nil, niil) in zip(ta.positive_included_literals, ta.positive_included_literals_inverted, ta.negative_included_literals, ta.negative_included_literals_inverted)
+        # p = check_clause(x, pil, piil, LF, b)
+        # n = check_clause(x, nil, niil, LF, b)
+        # @inbounds @simd for i in 1:64
+        #     votes[i] += p[i] - n[i]
+        # end
+        check_clause(x, pil, piil, LF, b)
+        @inbounds @simd for i in 1:64
+            votes[i] += b[i]
+        end
+        check_clause(x, nil, niil, LF, b)
+        @inbounds @simd for i in 1:64
+            votes[i] -= b[i]
+        end
+    end
+    return votes
 end
 
 
@@ -241,6 +334,44 @@ function predict(tm::AbstractTMClassifier, x::AbstractTMInput)::Any
 end
 
 
+# function predefine_batch_arrays(tm::AbstractTMClassifier)::Tuple{Vector{Int64}, Vector{class_type(tm)}, Vector{Int64}}
+#     best_vote::Vector{Int64} = fill(typemin(Int64), 64)
+#     best_cls::Vector = Vector{class_type(tm)}(undef, 64)
+#     votes::Vector{Int64} = Vector{Int64}(undef, 64)
+#     return best_vote, best_cls, votes
+# end
+function predefine_batch_arrays(tm::AbstractTMClassifier)::Tuple{Vector{Int64}, Vector{Int64}, Vector{Int64}}
+    best_vote::Vector{Int64} = fill(typemin(Int64), 64)
+    votes::Vector{Int64} = Vector{Int64}(undef, 64)
+    b::Vector{Int64} = Vector{Int64}(undef, 64)
+    return best_vote, votes, b
+end
+
+
+#function predict(tm::AbstractTMClassifier, x::TMInputBatch, best_vote::Vector{Int64}, best_cls::Vector, votes::Vector{Int64})
+function predict(tm::AbstractTMClassifier, x::TMInputBatch, best_vote::Vector{Int64}, votes::Vector{Int64}, b::Vector{Int64})
+    fill!(best_vote, typemin(Int64))
+    best_cls = Vector{class_type(tm)}(undef, x.batch_size)
+    @inbounds for (cls, ta) in tm.clauses
+        fill!(votes, 0)
+        votes = vote(ta, x, tm.LF, votes, b)
+        @inbounds for i in 1:x.batch_size
+            if votes[i] > best_vote[i]
+                best_vote[i] = votes[i]
+                best_cls[i] = cls
+            end
+        end
+    end
+    # Yes, we need to allocate a new array here using collect()
+#    return best_cls[1:x.batch_size]
+    return best_cls
+end
+
+function predict(tm::AbstractTMClassifier, x::TMInputBatch)::Vector
+    predict(tm, x, predefine_batch_arrays(tm)...)
+end
+
+
 function predict(tm::AbstractTMClassifier, X::Vector{TMInput})::Vector
     predicted::Vector = Vector{class_type(tm)}(undef, length(X))  # Predefine vector for @threads access
     @threads for i in eachindex(X)
@@ -250,9 +381,43 @@ function predict(tm::AbstractTMClassifier, X::Vector{TMInput})::Vector
 end
 
 
+function predict(tm::AbstractTMClassifier, X::Vector{TMInputBatch})::Vector
+    # Predefine vectors for @threads access
+    predicted = Vector{Vector{class_type(tm)}}(undef, length(X))
+    thread_best_vote = Vector{Vector{Int64}}(undef, Threads.nthreads())
+#    thread_best_cls = Vector{Vector{class_type(tm)}}(undef, Threads.nthreads())
+    thread_votes = Vector{Vector{Int64}}(undef, Threads.nthreads())
+    thread_b = Vector{Vector{Int64}}(undef, Threads.nthreads())
+    for tid in 1:Threads.nthreads()
+#        thread_best_vote[tid], thread_best_cls[tid], thread_votes[tid] = predefine_batch_arrays(tm)
+        thread_best_vote[tid], thread_votes[tid], thread_b[tid] = predefine_batch_arrays(tm)
+    end
+    @threads for i in eachindex(X)
+        tid::Int64 = Threads.threadid()
+#        predicted[i] = predict(tm, X[i], thread_best_vote[tid], thread_best_cls[tid], thread_votes[tid])
+        predicted[i] = predict(tm, X[i], thread_best_vote[tid], thread_votes[tid], thread_b[tid])
+    end
+    return predicted
+end
+
+
 function accuracy(predicted::Vector{T}, Y::Vector{T})::Float64 where T
     @assert length(predicted) == length(Y)
     return sum(@inbounds 1 for (p, y) in zip(predicted, Y) if p == y; init=0) / length(Y)
+end
+
+
+function accuracy(predicted::Vector{Vector{T}}, Y::Vector{T})::Float64 where T
+    c::Int64 = 0
+    a::Int64 = 0
+    @inbounds for batch in predicted
+        @inbounds @simd for pred in batch
+            c += 1
+            a += (pred == Y[c])
+        end
+    end
+    @assert c == length(Y)
+    return a / c
 end
 
 
@@ -536,7 +701,8 @@ function benchmark(tm::AbstractTMClassifier, X::Vector{TMInput}, Y::Vector, loop
         else
             _X::Vector{TMInput} = Vector{TMInput}(undef, length(perm))
             @threads for i in eachindex(_X)
-                _X[i] = deepcopy(X[perm[i]])
+                # This is 4.5x faster than deepcopy()
+                _X[i] = TMInput(X[perm[i]].x)
             end
             X = _X
         end
