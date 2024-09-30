@@ -264,21 +264,21 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
             if check_clause(x, literals1[j], literals_inverted1[j], tm.LF) > 0  # Small change: Added `> 0`
                 if (length(literals1[j]) + length(literals_inverted1[j]) <= tm.L)
                     @inbounds for i = 1:ta.clause_size
-                        if (x[i] == true) && (c[i] < ta.state_max)
+                        if (x.x[i] == true) && (c[i] < ta.state_max)
                             c[i] += one(UInt8)
                         end
-                        if (x[i] == false) && (ci[i] < ta.state_max)
+                        if (x.x[i] == false) && (ci[i] < ta.state_max)
                             ci[i] += one(UInt8)
                         end
                     end
                 end
                 @inbounds for i = 1:ta.clause_size
                     # No random
-                    if (x[i] == false) && (c[i] < ta.include_limit) && (c[i] > ta.state_min)
+                    if (x.x[i] == false) && (c[i] < ta.include_limit) && (c[i] > ta.state_min)
                         c[i] -= one(UInt8)
                     end
                     # No random
-                    if (x[i] == true) && (ci[i] < ta.include_limit) && (ci[i] > ta.state_min)
+                    if (x.x[i] == true) && (ci[i] < ta.include_limit) && (ci[i] > ta.state_min)
                         ci[i] -= one(UInt8)
                     end
                 end
@@ -304,11 +304,11 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
             if check_clause(x, literals2[j], literals_inverted2[j], tm.LF) > 0  # Small change: Added `> 0`
                 @inbounds for i = 1:ta.clause_size
                     # No random.
-                    if (x[i] == false) && (c[i] < ta.include_limit)
+                    if (x.x[i] == false) && (c[i] < ta.include_limit)
                         c[i] += one(UInt8)
                     end
                     # No random.
-                    if (x[i] == true) && (ci[i] < ta.include_limit)
+                    if (x.x[i] == true) && (ci[i] < ta.include_limit)
                         ci[i] += one(UInt8)
                     end
                 end
@@ -549,7 +549,7 @@ function optimize!(tm::AbstractTMClassifier, X::Vector{TMInput}; verbose::Int=0)
                     d = Dict(k => 0 for k in c)
                     for x in X
                         for k in keys(d)
-                            if x[k] == check
+                            if x.x[k] == check
                                 d[k] += 1
                             end
                         end
