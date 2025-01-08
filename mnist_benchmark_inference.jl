@@ -28,4 +28,4 @@ tm_opt = load("./models/tm_optimized_40_fp.tm")
 # without accounting for overhead from data structures.
 # For the MNIST test dataset, 50000 corresponds to 46 GB of prepared input data.
 # You need at least 8GB RAM to run this benchmark.
-benchmark(tm_opt, x_test, y_test, 1000, batch=true, warmup=true)
+benchmark(tm_opt, x_test, y_test, 5000, batch=true, warmup=true)
