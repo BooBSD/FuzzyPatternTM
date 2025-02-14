@@ -458,7 +458,7 @@ function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vect
     end
     if verbose > 0
         println("\nRunning in $(nthreads()) threads.")
-        println("Accuracy over $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)):\n")
+        println("Accuracy over $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), LF: $(tm.LF), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)):\n")
     end
     best_tms = Tuple{AbstractTMClassifier, Float64}[]
     all_time = @elapsed begin
@@ -476,7 +476,7 @@ function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vect
         end
     end
     if verbose > 0
-        println("\nDone. $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)).")
+        println("\nDone. $(epochs) epochs (Clauses: $(tm.clauses_num), T: $(tm.T), R: $(tm.R), L: $(tm.L), LF: $(tm.LF), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit)).")
         elapsed = Time(0) + Second(floor(Int, all_time))
         @printf("Time elapsed: %s. Best accuracy was: %.2f%%.\n\n", elapsed, best_tms[1][2] * 100)
     end
