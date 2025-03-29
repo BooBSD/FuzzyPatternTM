@@ -26,10 +26,16 @@ y_train = Int8.(y_train)
 y_test = Int8.(y_test)
 
 const CLAUSES = 20
-const T = 16
-const R = 0.992
+const T = 22
+const R = 0.995
 const L = 150
 const LF = 50
+
+# const CLAUSES = 200
+# const T = 28
+# const R = 0.997
+# const L = 24
+# const LF = 8
 
 # const CLAUSES = 40
 # const T = 10
