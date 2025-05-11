@@ -27,33 +27,33 @@ y_test = Int8.(y_test)
 
 const CLAUSES = 20
 const T = 22
-const R = 0.995
+const S = 200
 const L = 150
 const LF = 50
 
 # const CLAUSES = 200
 # const T = 28
-# const R = 0.997
+# const S = 350
 # const L = 24
 # const LF = 8
 
-# const CLAUSES = 40
-# const T = 10
-# const R = 0.992
-# const L = 10
-# const LF = 5
-
 # const CLAUSES = 2000
 # const T = 100
-# const R = 0.997
+# const S = 350
 # const L = 20
 # const LF = 10
+
+# const CLAUSES = 40
+# const T = 10
+# const S = 125
+# const L = 10
+# const LF = 5
 
 const EPOCHS = 2000
 const best_tms_size = 512
 
 # Training the TM model
-tm = TMClassifier{eltype(y_train)}(CLAUSES, T, R, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.
+tm = TMClassifier{eltype(y_train)}(CLAUSES, T, S, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.
 tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, best_tms_size=best_tms_size, shuffle=true, batch=true, verbose=1)
 
 save(tms, "/tmp/tms.tm")
