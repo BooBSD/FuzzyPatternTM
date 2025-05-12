@@ -263,9 +263,9 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
 
     # Feedback 1
     @inbounds for (j, (c, ci)) in enumerate(zip(eachcol(clauses1), eachcol(clauses_inverted1)))
-        if (rand() < update)
+        if rand() < update
             if check_clause(x, literals1[j], literals_inverted1[j], tm.LF) > 0  # Small change: Added `> 0`
-                if (length(literals1[j]) + length(literals_inverted1[j]) <= tm.L)
+                if length(literals1[j]) + length(literals_inverted1[j]) <= tm.L
                     @inbounds for i = 1:ta.clause_size
                         if (x.x[i] == true) && (c[i] < ta.state_max)
                             c[i] += one(UInt8)
@@ -303,7 +303,7 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
     end
     # Feedback 2
     @inbounds for (j, (c, ci)) in enumerate(zip(eachcol(clauses2), eachcol(clauses_inverted2)))
-        if (rand() < update)
+        if rand() < update
             if check_clause(x, literals2[j], literals_inverted2[j], tm.LF) > 0  # Small change: Added `> 0`
                 @inbounds for i = 1:ta.clause_size
                     # No random.
