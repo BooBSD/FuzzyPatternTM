@@ -291,8 +291,6 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
                     if c[i] > ta.state_min
                         c[i] -= one(UInt8)
                     end
-                end
-                @inbounds for _ in 1:tm.s
                     i = rand(1:ta.clause_size)  # And here's another.
                     if ci[i] > ta.state_min
                         ci[i] -= one(UInt8)
