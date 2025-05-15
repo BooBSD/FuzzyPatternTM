@@ -14,7 +14,7 @@ Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
   - New hyperparameter `LF` that sets the number of literal misses allowed for the clause.
   - Good accuracy and learning speed for small models. Achieves up to **98.56%** peak accuracy on **MNIST** and **89.67%** peak accuracy on **Fashion MNIST** using a model with **20 clauses** per class (10 positive + 10 negative). The original Tsetlin Machine from 2018 achieves approximately the same accuracy but with **2000** clauses per class.
   - The accuracy and learning speed of large models (2048 clauses per class) are not very good. We need to delve deeper into this issue.
-  - Blazingly fast batch inference is broken. :(
+  - Blazingly fast batch inference is not so fast. :(
 
 Strange training behavior observed in large models
 --------------------------------------------------
