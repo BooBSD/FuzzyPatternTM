@@ -294,11 +294,9 @@ function feedback!(tm::TMClassifier, ta::TATeam, x::TMInput, clauses1::Matrix{UI
         if rand() < update
             if check_clause(x, literals2[j], literals_inverted2[j], tm.LF) > 0  # Small change: Added `> 0`
                 @inbounds for i = 1:ta.clause_size
-                    # No random.
                     if (x.x[i] == false) && (c[i] < ta.include_limit)
                         c[i] += one(UInt8)
                     end
-                    # No random.
                     if (x.x[i] == true) && (ci[i] < ta.include_limit)
                         ci[i] += one(UInt8)
                     end
