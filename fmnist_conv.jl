@@ -27,7 +27,6 @@ Kx7 = [-3 -2 -1 0 1 2 3; -4 -3 -2 0 2 3 4; -5 -4 -3 0 3 4 5; -6 -5 -4 0 4 5 6; -
 Kx5 = [0 1 2 3 4; -1 0 2 3 3; -2 -2 0 2 2; -3 -3 -2 0 1; -4 -3 -2 -1 0] * one(Float32)
 #Kx7 = [0 1 2 3 4 5 6; -1 0 2 3 4 5 5; -2 -2 0 3 4 4 4; -3 -3 -3 0 3 3 3; -4 -4 -4 -3 0 2 2; -5 -5 -4 -3 -2 0 1; -6 -5 -4 -3 -2 -1 0] * one(Float32)
 
-
 Ky3 = rotl90(Kx3)
 Ky5 = rotl90(Kx5)
 Ky7 = rotl90(Kx7)
@@ -35,7 +34,6 @@ Ky7 = rotl90(Kx7)
 Kp3 = 1  # Padding 1
 Kp5 = 2  # Padding 2
 Kp7 = 3  # Padding 3
-
 
 x_train_conv_orient_x3 = [fastconv(x, Kx3)[1+Kp3:end-Kp3, 1+Kp3:end-Kp3] for x in x_train]
 x_train_conv_orient_y3 = [fastconv(x, Ky3)[1+Kp3:end-Kp3, 1+Kp3:end-Kp3] for x in x_train]
@@ -54,7 +52,6 @@ x_train_conv_orient_y7 = [fastconv(x, Ky7)[1+Kp7:end-Kp7, 1+Kp7:end-Kp7] for x i
 
 x_test_conv_orient_x7 = [fastconv(x, Kx7)[1+Kp7:end-Kp7, 1+Kp7:end-Kp7] for x in x_test]
 x_test_conv_orient_y7 = [fastconv(x, Ky7)[1+Kp7:end-Kp7, 1+Kp7:end-Kp7] for x in x_test]
-
 
 train_hist_data = vec(vcat(x_train...))
 
@@ -128,7 +125,6 @@ y7_hist_neg_25::Float64 = quantile([x for x in y7_hist_data if x < 0], 1 - 0.25)
     y7_hist_neg_34::Float64 = quantile([x for x in y7_hist_data if x < 0], 1 - 0.34)
 y7_hist_neg_50::Float64 = quantile([x for x in y7_hist_data if x < 0], 1 - 0.50)
 y7_hist_neg_75::Float64 = quantile([x for x in y7_hist_data if x < 0], 1 - 0.75)
-
 
 # Booleanization
 function bools(x7, y7, x5, y5, x3, y3, io)
@@ -215,9 +211,6 @@ x_test = [bools(x7, y7, x5, y5, x3, y3, io) for (x7, y7, x5, y5, x3, y3, io) in 
 
 y_train = Int8.(y_train)
 y_test = Int8.(y_test)
-
-println(length(x_train[1]))
-
 
 # CLAUSES = 2000  # Best accuracy: 94.10% after 160 epoch
 # T = 350
