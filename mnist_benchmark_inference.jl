@@ -1,4 +1,4 @@
-include("FuzzyPatternsTM.jl")
+include("FuzzyPatternTM.jl")
 
 try
     using MLDatasets: MNIST
@@ -8,7 +8,7 @@ catch LoadError
 end
 
 using MLDatasets: MNIST
-using .FuzzyPatternsTM: TMInput, benchmark, load, unzip, booleanize
+using .FuzzyPatternTM: TMInput, benchmark, load, unzip, booleanize
 
 x_test, y_test = unzip([MNIST(:test)...])
 

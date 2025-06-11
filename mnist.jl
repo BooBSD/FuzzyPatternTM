@@ -1,4 +1,4 @@
-include("FuzzyPatternsTM.jl")
+include("FuzzyPatternTM.jl")
 
 try
     using MLDatasets: MNIST, FashionMNIST
@@ -9,7 +9,7 @@ end
 
 using Printf: @printf
 using MLDatasets: MNIST, FashionMNIST
-using .FuzzyPatternsTM: TMInput, TMClassifier, train!, predict, accuracy, save, load, unzip, booleanize, combine, optimize!, benchmark
+using .FuzzyPatternTM: TMInput, TMClassifier, train!, predict, accuracy, save, load, unzip, booleanize, combine, optimize!, benchmark
 
 
 x_train, y_train = unzip([MNIST(:train)...])

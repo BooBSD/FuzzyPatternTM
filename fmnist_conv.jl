@@ -1,4 +1,4 @@
-include("FuzzyPatternsTM.jl")
+include("FuzzyPatternTM.jl")
 include("./utils.jl")
 
 try
@@ -10,7 +10,7 @@ end
 
 using Statistics
 using MLDatasets: FashionMNIST
-using .FuzzyPatternsTM: TMInput, TMClassifier, train!, unzip
+using .FuzzyPatternTM: TMInput, TMClassifier, train!, unzip
 
 x_train, y_train = unzip([FashionMNIST(:train)...])
 x_test, y_test = unzip([FashionMNIST(:test)...])
