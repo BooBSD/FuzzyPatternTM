@@ -1,18 +1,20 @@
 # Fuzzy-Pattern Tsetlin Machine
 
-Experimental version of Tsetlin Machine.
-The changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) are located in the following functions: `check_clause()`, `feedback!()` and `train!()`.
-Please, see the comments.
+Abstract
+--------
 
-**FashionMNIST** peak test accuracy using *convolutional* preprocessing:
+The "*all-or-nothing*" clause evaluation strategy is a core mechanism of Tsetlin Machine family algorithms. In this approach, each clause—a logical pattern composed of binary literals mapped to input data—is disqualified from voting if even a single literal fails. Due to this strict requirement, standard Tsetlin Machines must employ thousands of clauses to achieve competitive accuracy.
 
-- 2 clauses per class: **92.20%**
-- 20 clauses per class: **93.41%**
-- 2000 clauses per class: **94.10%**
+In this paper, we introduce the **Fuzzy-Pattern Tsetlin Machine (FPTM)**, a novel approach in which clause evaluation is fuzzy rather than strict. If some literals in a clause fail, the remaining ones can still contribute to the overall vote with a proportionally reduced score. Each clause is effectively composed of sub-patterns that adapt individually to the input, enabling more flexible, efficient and robust pattern matching.
+
+This fuzzy mechanism significantly reduces the number of required clauses, memory footprint, and training time—while maintaining competitive accuracy. Empirical results on the **IMDB** dataset demonstrate a median peak test accuracy of **90.15%** using only **1 (one) clause per class**, representing a **50× reduction** in both clause count and memory usage compared to CoalescedTM. The Tsetlin Automata state matrix fits within **50 KB**, allowing online training on modern microcontrollers. Training is **36× faster** than CoalescedTM on a single-thread CPU, and **316× faster** with 32-thread parallelism. For example, while CoalescedTM requires nearly **4 hours** to train for 1000 epochs, FPTM completes the same task in just **45 seconds** while achieving comparable accuracy.
+
+Inference is also extremely fast: up to **34.5 million predictions per second** in batch mode, with a throughput of **51.4 GB/s**.
+
+Further experiments on the **FashionMNIST** dataset with convolutional preprocessing yield similarly promising results: **92.20%** peak test accuracy with only **2 clauses per class**, **93.41%** with 20 clauses per class, and **94.10%** with 2000 clauses per class.
 
 
 Here is the tiny **20-clause** model training result for the **MNIST** dataset:
-
 <img width="698" alt="Experimental Fuzzy Patterns Tsetlin Machine MNIST accuracy 98.56%" src="https://github.com/user-attachments/assets/05768a26-036a-40ce-b548-95925e96a01d">
 
 Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
@@ -20,6 +22,9 @@ Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 
   - New hyperparameter `LF` that sets the number of literal misses allowed for the clause. The special case `LF = 1` corresponds to the same internal logic used in the [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) library.
   - Good accuracy and learning speed for small models. Achieves up to **98.56%** peak accuracy on **MNIST** and **89.67%** peak accuracy on **Fashion MNIST** using a model with **20 clauses** per class (10 positive + 10 negative). The original Tsetlin Machine from 2018 achieves approximately the same accuracy but with **2000** clauses per class.
+
+The changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) are located in the following functions: `check_clause()`, `feedback!()` and `train!()`.
+Please, see the comments.
 
 How to run MNIST example
 ------------------------
