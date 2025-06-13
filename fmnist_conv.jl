@@ -201,7 +201,7 @@ x_test = [bools(raw, x3, y3, x5, y5, x7, y7) for (raw, x3, y3, x5, y5, x7, y7) i
 y_train = Int8.(y_train)
 y_test = Int8.(y_test)
 
-println("done.")
+println("Done.")
 
 # CLAUSES = 2  # Best accuracy: 92.20% after 900 epochs
 # T = 64
