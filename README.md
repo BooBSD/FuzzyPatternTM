@@ -3,16 +3,15 @@
 Abstract
 --------
 
-The "*all-or-nothing*" clause evaluation strategy is a core mechanism of Tsetlin Machine family algorithms. In this approach, each clause—a logical pattern composed of binary literals mapped to input data—is disqualified from voting if even a single literal fails. Due to this strict requirement, standard Tsetlin Machines must employ thousands of clauses to achieve competitive accuracy.
+The "*all-or-nothing*" clause evaluation strategy is a core mechanism of the Tsetlin Machine family of algorithms. In this approach, each clause—a logical pattern composed of binary literals mapped to input data—is disqualified from voting if even a single literal fails. Due to this strict requirement, standard Tsetlin Machines must employ thousands of clauses to achieve competitive accuracy.
 
-In this paper, we introduce the **Fuzzy-Pattern Tsetlin Machine (FPTM)**, a novel approach in which clause evaluation is fuzzy rather than strict. If some literals in a clause fail, the remaining ones can still contribute to the overall vote with a proportionally reduced score. That means each clause is effectively composed of sub-patterns that adapt individually to the input, enabling more flexible, efficient, and robust pattern matching.
+In this paper, we introduce the **Fuzzy-Pattern Tsetlin Machine (FPTM)**, a novel variant in which clause evaluation is fuzzy rather than strict. If some literals in a clause fail, the remaining ones can still contribute to the overall vote with a proportionally reduced score. This means each clause effectively consists of sub-patterns that adapt individually to the input, enabling more flexible, efficient, and robust pattern matching.
 
-This fuzzy mechanism significantly reduces the number of required clauses, memory footprint, and training time—while maintaining competitive accuracy. Empirical results on the **IMDB** dataset demonstrate a median peak test accuracy of **90.15%** using only **1 (one) clause per class**, representing a **50× reduction** in both clause count and memory usage compared to CoalescedTM. The Tsetlin Automata state matrix fits within **50 KB**, allowing online training on modern microcontrollers. Training is **36× faster** than CoalescedTM on a single-thread CPU, and **316× faster** with 32-thread parallelism. For example, while CoalescedTM requires nearly **4 hours** to train for 1000 epochs, FPTM completes the same task in just **45 seconds** while achieving comparable accuracy.
+This fuzzy mechanism significantly reduces the number of required clauses, memory footprint, and training time—while maintaining competitive accuracy. Empirical results on the **IMDB** dataset show a median peak test accuracy of **90.15%** using only **one clause per class**, representing a **50× reduction** in both clause count and memory usage compared to CoalescedTM. The Tsetlin Automata state matrix fits within **50 KB**, enabling online training on modern microcontrollers. Training is **36× faster** than CoalescedTM on a single-threaded CPU, and **316× faster** with 32-thread parallelism. For instance, while CoalescedTM requires nearly **4 hours** to train for 1000 epochs, FPTM completes the same task in just **45 seconds**, with comparable accuracy.
 
 Inference is also extremely fast: up to **34.5 million predictions per second** in batch mode, with a throughput of **51.4 GB/s** on a desktop CPU.
 
 Further experiments on the **FashionMNIST** dataset with convolutional preprocessing yield similarly promising results: **92.20%** peak test accuracy with only **2 clauses per class**, **93.41%** with 20 clauses per class, and **94.10%** with 2000 clauses per class.
-
 
 Here is the tiny **20-clause** model training result for the **MNIST** dataset:
 <img width="698" alt="Experimental Fuzzy Patterns Tsetlin Machine MNIST accuracy 98.56%" src="https://github.com/user-attachments/assets/05768a26-036a-40ce-b548-95925e96a01d">
