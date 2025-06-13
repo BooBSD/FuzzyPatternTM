@@ -9,7 +9,7 @@ In this paper, we introduce the **Fuzzy-Pattern Tsetlin Machine (FPTM)**, a nove
 
 This fuzzy mechanism significantly reduces the number of required clauses, memory footprint, and training time—while maintaining competitive accuracy. Empirical results on the **IMDB** dataset demonstrate a median peak test accuracy of **90.15%** using only **1 (one) clause per class**, representing a **50× reduction** in both clause count and memory usage compared to CoalescedTM. The Tsetlin Automata state matrix fits within **50 KB**, allowing online training on modern microcontrollers. Training is **36× faster** than CoalescedTM on a single-thread CPU, and **316× faster** with 32-thread parallelism. For example, while CoalescedTM requires nearly **4 hours** to train for 1000 epochs, FPTM completes the same task in just **45 seconds** while achieving comparable accuracy.
 
-Inference is also extremely fast: up to **34.5 million predictions per second** in batch mode, with a throughput of **51.4 GB/s**.
+Inference is also extremely fast: up to **34.5 million predictions per second** in batch mode, with a throughput of **51.4 GB/s** on a desktop CPU.
 
 Further experiments on the **FashionMNIST** dataset with convolutional preprocessing yield similarly promising results: **92.20%** peak test accuracy with only **2 clauses per class**, **93.41%** with 20 clauses per class, and **94.10%** with 2000 clauses per class.
 
