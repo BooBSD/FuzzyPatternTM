@@ -200,94 +200,94 @@ y9_hist_neg_75::Float64 = quantile([x for x in y9_hist_data if x < 0], 1 - 0.75)
 function bools(raw, x3, y3, x5, y5, x7, y7, x9, y9)
     return TMInput([
         # Raw pixels
-        [x > 0 ? true : false for x in raw];
-        [x > raw_hist_25 ? true : false for x in raw];
-        [x > raw_hist_50 ? true : false for x in raw];
-        [x > raw_hist_75 ? true : false for x in raw];
+        [x > 0 for x in raw];
+        [x > raw_hist_25 for x in raw];
+        [x > raw_hist_50 for x in raw];
+        [x > raw_hist_75 for x in raw];
 
         # 3x3 convolution results
-        [x > 0 ? true : false for x in x3];
-        [x > x3_hist_pos_25 ? true : false for x in x3];
-        [x > x3_hist_pos_34 ? true : false for x in x3];
-        [x > x3_hist_pos_50 ? true : false for x in x3];
-        [x > x3_hist_pos_75 ? true : false for x in x3];
-        [x < x3_hist_neg_25 ? true : false for x in x3];
-        [x < x3_hist_neg_34 ? true : false for x in x3];
-        [x < x3_hist_neg_50 ? true : false for x in x3];
-        [x < x3_hist_neg_75 ? true : false for x in x3];
+        [x > 0 for x in x3];
+        [x > x3_hist_pos_25 for x in x3];
+        [x > x3_hist_pos_34 for x in x3];
+        [x > x3_hist_pos_50 for x in x3];
+        [x > x3_hist_pos_75 for x in x3];
+        [x < x3_hist_neg_25 for x in x3];
+        [x < x3_hist_neg_34 for x in x3];
+        [x < x3_hist_neg_50 for x in x3];
+        [x < x3_hist_neg_75 for x in x3];
 
-        [x > 0 ? true : false for x in y3];
-        [x > y3_hist_pos_25 ? true : false for x in y3];
-        [x > y3_hist_pos_34 ? true : false for x in y3];
-        [x > y3_hist_pos_50 ? true : false for x in y3];
-        [x > y3_hist_pos_75 ? true : false for x in y3];
-        [x < y3_hist_neg_25 ? true : false for x in y3];
-        [x < y3_hist_neg_34 ? true : false for x in y3];
-        [x < y3_hist_neg_50 ? true : false for x in y3];
-        [x < y3_hist_neg_75 ? true : false for x in y3];
+        [x > 0 for x in y3];
+        [x > y3_hist_pos_25 for x in y3];
+        [x > y3_hist_pos_34 for x in y3];
+        [x > y3_hist_pos_50 for x in y3];
+        [x > y3_hist_pos_75 for x in y3];
+        [x < y3_hist_neg_25 for x in y3];
+        [x < y3_hist_neg_34 for x in y3];
+        [x < y3_hist_neg_50 for x in y3];
+        [x < y3_hist_neg_75 for x in y3];
 
         # 5x5 convolution results
-        [x > 0 ? true : false for x in x5];
-        [x > x5_hist_pos_25 ? true : false for x in x5];
-        [x > x5_hist_pos_34 ? true : false for x in x5];
-        [x > x5_hist_pos_50 ? true : false for x in x5];
-        [x > x5_hist_pos_75 ? true : false for x in x5];
-        [x < x5_hist_neg_25 ? true : false for x in x5];
-        [x < x5_hist_neg_34 ? true : false for x in x5];
-        [x < x5_hist_neg_50 ? true : false for x in x5];
-        [x < x5_hist_neg_75 ? true : false for x in x5];
+        [x > 0 for x in x5];
+        [x > x5_hist_pos_25 for x in x5];
+        [x > x5_hist_pos_34 for x in x5];
+        [x > x5_hist_pos_50 for x in x5];
+        [x > x5_hist_pos_75 for x in x5];
+        [x < x5_hist_neg_25 for x in x5];
+        [x < x5_hist_neg_34 for x in x5];
+        [x < x5_hist_neg_50 for x in x5];
+        [x < x5_hist_neg_75 for x in x5];
 
-        [x > 0 ? true : false for x in y5];
-        [x > y5_hist_pos_25 ? true : false for x in y5];
-        [x > y5_hist_pos_34 ? true : false for x in y5];
-        [x > y5_hist_pos_50 ? true : false for x in y5];
-        [x > y5_hist_pos_75 ? true : false for x in y5];
-        [x < y5_hist_neg_25 ? true : false for x in y5];
-        [x < y5_hist_neg_34 ? true : false for x in y5];
-        [x < y5_hist_neg_50 ? true : false for x in y5];
-        [x < y5_hist_neg_75 ? true : false for x in y5];
+        [x > 0 for x in y5];
+        [x > y5_hist_pos_25 for x in y5];
+        [x > y5_hist_pos_34 for x in y5];
+        [x > y5_hist_pos_50 for x in y5];
+        [x > y5_hist_pos_75 for x in y5];
+        [x < y5_hist_neg_25 for x in y5];
+        [x < y5_hist_neg_34 for x in y5];
+        [x < y5_hist_neg_50 for x in y5];
+        [x < y5_hist_neg_75 for x in y5];
 
         # 7x7 convolution results
-        [x > 0 ? true : false for x in x7];
-        [x > x7_hist_pos_25 ? true : false for x in x7];
-        [x > x7_hist_pos_34 ? true : false for x in x7];
-        [x > x7_hist_pos_50 ? true : false for x in x7];
-        [x > x7_hist_pos_75 ? true : false for x in x7];
-        [x < x7_hist_neg_25 ? true : false for x in x7];
-        [x < x7_hist_neg_34 ? true : false for x in x7];
-        [x < x7_hist_neg_50 ? true : false for x in x7];
-        [x < x7_hist_neg_75 ? true : false for x in x7];
+        [x > 0 for x in x7];
+        [x > x7_hist_pos_25 for x in x7];
+        [x > x7_hist_pos_34 for x in x7];
+        [x > x7_hist_pos_50 for x in x7];
+        [x > x7_hist_pos_75 for x in x7];
+        [x < x7_hist_neg_25 for x in x7];
+        [x < x7_hist_neg_34 for x in x7];
+        [x < x7_hist_neg_50 for x in x7];
+        [x < x7_hist_neg_75 for x in x7];
 
-        [x > 0 ? true : false for x in y7];
-        [x > y7_hist_pos_25 ? true : false for x in y7];
-        [x > y7_hist_pos_34 ? true : false for x in y7];
-        [x > y7_hist_pos_50 ? true : false for x in y7];
-        [x > y7_hist_pos_75 ? true : false for x in y7];
-        [x < y7_hist_neg_25 ? true : false for x in y7];
-        [x < y7_hist_neg_34 ? true : false for x in y7];
-        [x < y7_hist_neg_50 ? true : false for x in y7];
-        [x < y7_hist_neg_75 ? true : false for x in y7];
+        [x > 0 for x in y7];
+        [x > y7_hist_pos_25 for x in y7];
+        [x > y7_hist_pos_34 for x in y7];
+        [x > y7_hist_pos_50 for x in y7];
+        [x > y7_hist_pos_75 for x in y7];
+        [x < y7_hist_neg_25 for x in y7];
+        [x < y7_hist_neg_34 for x in y7];
+        [x < y7_hist_neg_50 for x in y7];
+        [x < y7_hist_neg_75 for x in y7];
 
         # 9x9 convolution results
-        [x > 0 ? true : false for x in x9];
-        [x > x9_hist_pos_25 ? true : false for x in x9];
-        [x > x9_hist_pos_34 ? true : false for x in x9];
-        [x > x9_hist_pos_50 ? true : false for x in x9];
-        [x > x9_hist_pos_75 ? true : false for x in x9];
-        [x < x9_hist_neg_25 ? true : false for x in x9];
-        [x < x9_hist_neg_34 ? true : false for x in x9];
-        [x < x9_hist_neg_50 ? true : false for x in x9];
-        [x < x9_hist_neg_75 ? true : false for x in x9];
+        [x > 0 for x in x9];
+        [x > x9_hist_pos_25 for x in x9];
+        [x > x9_hist_pos_34 for x in x9];
+        [x > x9_hist_pos_50 for x in x9];
+        [x > x9_hist_pos_75 for x in x9];
+        [x < x9_hist_neg_25 for x in x9];
+        [x < x9_hist_neg_34 for x in x9];
+        [x < x9_hist_neg_50 for x in x9];
+        [x < x9_hist_neg_75 for x in x9];
 
-        [x > 0 ? true : false for x in y9];
-        [x > y9_hist_pos_25 ? true : false for x in y9];
-        [x > y9_hist_pos_34 ? true : false for x in y9];
-        [x > y9_hist_pos_50 ? true : false for x in y9];
-        [x > y9_hist_pos_75 ? true : false for x in y9];
-        [x < y9_hist_neg_25 ? true : false for x in y9];
-        [x < y9_hist_neg_34 ? true : false for x in y9];
-        [x < y9_hist_neg_50 ? true : false for x in y9];
-        [x < y9_hist_neg_75 ? true : false for x in y9];
+        [x > 0 for x in y9];
+        [x > y9_hist_pos_25 for x in y9];
+        [x > y9_hist_pos_34 for x in y9];
+        [x > y9_hist_pos_50 for x in y9];
+        [x > y9_hist_pos_75 for x in y9];
+        [x < y9_hist_neg_25 for x in y9];
+        [x < y9_hist_neg_34 for x in y9];
+        [x < y9_hist_neg_50 for x in y9];
+        [x < y9_hist_neg_75 for x in y9];
     ])
 end
 
