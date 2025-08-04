@@ -1,5 +1,5 @@
-include("FuzzyPatternTM.jl")
-include("./utils.jl")
+include("../../FuzzyPatternTM.jl")
+include("../../utils.jl")
 
 try
     using MLDatasets: FashionMNIST
@@ -15,7 +15,7 @@ using Statistics
 using Serialization
 using Augmentor
 using MLDatasets: FashionMNIST
-using .FuzzyPatternTM: TMInput, TMClassifier, train!, unzip, save, load, combine, accuracy, predict
+using .FuzzyPatternTM: TMInput, unzip
 
 
 x_train, y_train = unzip([FashionMNIST(:train)...])
@@ -407,59 +407,5 @@ y_test = Int8.(y_test)
 
 Serialization.serialize("/tmp/train", (X_train, y_train))
 Serialization.serialize("/tmp/test", (X_test, y_test))
-# exit()
-X_train, y_train = Serialization.deserialize("/tmp/train")
-X_test, y_test = Serialization.deserialize("/tmp/test")
 
 println("Done.")
-
-# CLAUSES = 2  # Best accuracy: 92.20% after 900 epochs
-# T = 70
-# S = 700
-# L = 1000
-# LF = 1000
-
-# CLAUSES = 20  # Best accuracy: 93.41% after 820 epochs
-# T = 100
-# S = 700
-# L = 200
-# LF = 200
-
-# CLAUSES = 20
-# T = 100
-# S = 2000
-# L = 200
-# LF = 200
-
-# CLAUSES = 2000  # Best accuracy: 94.63% after 65 epochs
-# T = 400
-# S = 700
-# L = 30
-# LF = 30
-
-CLAUSES = 8000  # Best accuracy: 94.74% after 11 epochs, Normal 94.68% test acc after 50 epochs.
-T = 760
-S = 700
-L = 30
-LF = 30
-
-# CLAUSES = 200
-# T = 200
-# S = 700
-# L = 100
-# LF = 100
-
-
-EPOCHS = 1000
-
-# Training the TM model
-tm = TMClassifier{eltype(y_train)}(CLAUSES, T, S, L=L, LF=LF, states_num=256, include_limit=230)
-tms = train!(tm, X_train, y_train, X_test, y_test, EPOCHS, shuffle=true, verbose=1, best_tms_size=1)
-
-save(tms, "/tmp/tms.tm")
-# tms = load("/tmp/tms.tm")
-# tm, _ = combine(tms, 2, x_test, y_test)
-# save(tm, "/tmp/tm2.tm")
-# tm = load("/tmp/tm2.tm")
-# tm = tms[1][1]
-# accuracy(predict(tm, x_test), y_test) |> println

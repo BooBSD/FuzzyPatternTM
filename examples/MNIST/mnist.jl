@@ -1,4 +1,4 @@
-include("FuzzyPatternTM.jl")
+include("../../FuzzyPatternTM.jl")
 
 try
     using MLDatasets: MNIST, FashionMNIST
