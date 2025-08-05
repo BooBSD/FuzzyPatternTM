@@ -35,7 +35,7 @@ augmentbatch!(x_train_aug5, x_train, FlipY())  # Yes, Y, because of dataset orie
 x_train = [x_train; x_train_aug1; x_train_aug2; x_train_aug3; x_train_aug4; x_train_aug5]
 y_train = [y_train; y_train; y_train; y_train; y_train; y_train]
 
-print("Preparing input data... ")
+print("Preparing augmented dataset... ")
 
 # Convolution kernels
 Kx3 = [-1 0 1; -2 0 2; -1 0 1] * one(Float32)
@@ -284,7 +284,7 @@ end
 y_train = Int8.(y_train)
 y_test = Int8.(y_test)
 
-Serialization.serialize("/tmp/train", (X_train, y_train))
-Serialization.serialize("/tmp/test", (X_test, y_test))
+Serialization.serialize("/tmp/FMNIST_train", (X_train, y_train))
+Serialization.serialize("/tmp/FMNIST_test", (X_test, y_test))
 
 println("Done.")

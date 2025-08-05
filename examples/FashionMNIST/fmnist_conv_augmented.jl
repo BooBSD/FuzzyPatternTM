@@ -4,8 +4,8 @@ using Serialization
 using .FuzzyPatternTM: TMClassifier, train!
 
 
-X_train, y_train = Serialization.deserialize("/tmp/train")
-X_test, y_test = Serialization.deserialize("/tmp/test")
+X_train, y_train = Serialization.deserialize("/tmp/FMNIST_train")
+X_test, y_test = Serialization.deserialize("/tmp/FMNIST_test")
 
 # CLAUSES = 20
 # T = 100
