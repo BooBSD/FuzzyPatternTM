@@ -55,7 +55,7 @@ python examples/AmazonSales/prepare_dataset.py --dataset_noise_ratio=0.005
 Run the Noisy Amazon Sales training example:
 
 ```shell
-julia --project=. -O3 -t 32 examples/IMDb/imdb.jl
+julia --project=. -O3 -t 32 examples/AmazonSales/amazon.jl
 ```
 Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
