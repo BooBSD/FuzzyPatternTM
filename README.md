@@ -29,7 +29,7 @@ Please, see the comments.
 pip install -r requirements.txt
 ```
 
-### MNIST example
+### MNIST Example
 
 Run
 ```shell
@@ -37,7 +37,7 @@ julia --project=. -O3 -t 32 mnist.jl
 ```
 where `32` is the number of your logical CPU cores.
 
-### Fashion-MNIST example using convolutional preprocessing
+### Fashion-MNIST Example Using Convolutional Preprocessing
 
 Run
 ```shell
