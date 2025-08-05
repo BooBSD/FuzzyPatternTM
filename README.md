@@ -13,7 +13,7 @@ Additional experiments on the *Fashion-MNIST* dataset with convolutional preproc
 Here is the tiny **20-clause** model training result for the **MNIST** dataset:
 <img width="698" alt="Experimental Fuzzy Patterns Tsetlin Machine MNIST accuracy 98.56%" src="https://github.com/user-attachments/assets/05768a26-036a-40ce-b548-95925e96a01d">
 
-## Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
+## Changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 
   - New hyperparameter `LF` that sets the number of literal misses allowed for the clause. The special case `LF = 1` corresponds to the same internal logic used in the [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) library.
 
