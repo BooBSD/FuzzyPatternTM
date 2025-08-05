@@ -28,6 +28,8 @@ Please, see the comments.
 ```shell
 pip install -r requirements.txt
 ```
+In *all* Julia examples, we use `-t 32`, which corresponds to `32` logical CPU cores on your computer.
+Please adjust this parameter to match the actual number of logical CPU cores on your machine.
 
 ### IMDb Example
 
@@ -42,7 +44,6 @@ Run the IMDb training and benchmarking example:
 ```shell
 julia --project=. -O3 -t 32 examples/IMDb/imdb.jl
 ```
-Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
 ### Noisy Amazon Sales Example
 
@@ -57,7 +58,6 @@ Run the Noisy Amazon Sales training example:
 ```shell
 julia --project=. -O3 -t 32 examples/AmazonSales/amazon.jl
 ```
-Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
 ### Fashion-MNIST Example Using Convolutional Preprocessing
 
@@ -66,7 +66,6 @@ Run the Fashion-MNIST training example:
 ```shell
 julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv.jl
 ```
-Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
 ### Fashion-MNIST Example Using Convolutional Preprocessing and Data Augmentation
 
@@ -81,7 +80,6 @@ Run the large model training example on Fashion-MNIST:
 ```shell
 julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv_augmented.jl
 ```
-Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
 ### MNIST Example
 
@@ -90,4 +88,3 @@ Run the MNIST training example:
 ```shell
 julia --project=. -O3 -t 32 examples/MNIST/mnist.jl
 ```
-Here, `32` should be replaced with the number of logical CPU cores on your machine.
