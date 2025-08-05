@@ -28,8 +28,8 @@ Please, see the comments.
 ```shell
 pip install -r requirements.txt
 ```
-In *all* Julia examples, we use `-t 32`, which corresponds to `32` logical CPU cores.
-Please adjust this parameter to match the actual number of logical CPU cores on your machine.
+In *all* Julia examples, we use `-t 32`, which specifies the use of `32` logical CPU cores.
+Please adjust this parameter to match the actual number of logical cores available on your machine.
 
 ### IMDb Example
 
