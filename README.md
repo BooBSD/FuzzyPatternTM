@@ -36,7 +36,7 @@ Please adjust this parameter to match the actual number of logical cores availab
 Prepare IMDb dataset:
 
 ```shell
-python examples/IMDb/prepare_dataset.py
+python examples/IMDb/prepare_dataset.py --max-ngram=4 --features=12800 --imdb-num-words=40000
 ```
 
 Run the IMDb training and benchmarking example:
