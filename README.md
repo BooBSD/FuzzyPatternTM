@@ -13,8 +13,7 @@ Additional experiments on the *Fashion-MNIST* dataset with convolutional preproc
 Here is the tiny **20-clause** model training result for the **MNIST** dataset:
 <img width="698" alt="Experimental Fuzzy Patterns Tsetlin Machine MNIST accuracy 98.56%" src="https://github.com/user-attachments/assets/05768a26-036a-40ce-b548-95925e96a01d">
 
-Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
----------------------------------------------------------------------------
+## Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 
   - New hyperparameter `LF` that sets the number of literal misses allowed for the clause. The special case `LF = 1` corresponds to the same internal logic used in the [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) library.
   - Good accuracy and learning speed for small models. Achieves up to **98.56%** peak accuracy on **MNIST** and **89.67%** peak accuracy on **Fashion MNIST** using a model with **20 clauses** per class (10 positive + 10 negative). The original Tsetlin Machine from 2018 achieves approximately the same accuracy but with **2000** clauses per class.
@@ -22,14 +21,26 @@ Key features compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 The changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) are located in the following functions: `check_clause()`, `feedback!()` and `train!()`.
 Please, see the comments.
 
-How to run MNIST example
-------------------------
+## How to Run Examples
 
-0. Make sure that you have installed the latest version of the [Julia language](https://julialang.org/downloads/).
-1. Run `julia --project=. -O3 -t 32 mnist.jl` where `32` is the number of your logical CPU cores.
+0. Ensure that you have the latest version of the [Julia](https://julialang.org/downloads/) language installed.
+1. Some examples require dataset preparation scripts written in [Python](https://www.python.org/downloads/). To install the necessary dependencies, run:
+```shell
+pip install -r requirements.txt
+```
 
-How to run FashionMNIST example using convolutional preprocessing
------------------------------------------------------------------
+### MNIST example
 
-0. Make sure that you have installed the latest version of the [Julia language](https://julialang.org/downloads/).
-1. Run `julia --project=. -O3 -t 32 fmnist_conv.jl` where `32` is the number of your logical CPU cores.
+Run
+```shell
+julia --project=. -O3 -t 32 mnist.jl
+```
+where `32` is the number of your logical CPU cores.
+
+### Fashion-MNIST example using convolutional preprocessing
+
+Run
+```shell
+julia --project=. -O3 -t 32 fmnist_conv.jl
+```
+where `32` is the number of your logical CPU cores.
