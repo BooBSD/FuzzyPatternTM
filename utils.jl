@@ -1,3 +1,6 @@
+# Source: https://github.com/aamini/FastConv.jl/blob/master/src/utils.jl
+# License: MIT © 2016 Alexander Amini
+
 export fastconv
 
 using Base.Cartesian

@@ -7,12 +7,6 @@ using .FuzzyPatternTM: TMClassifier, train!
 X_train, y_train = Serialization.deserialize("/tmp/train")
 X_test, y_test = Serialization.deserialize("/tmp/test")
 
-# CLAUSES = 20  # Best accuracy: 93.41% after 820 epochs
-# T = 100
-# S = 700
-# L = 200
-# LF = 200
-
 # CLAUSES = 20
 # T = 100
 # S = 700
