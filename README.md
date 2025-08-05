@@ -68,10 +68,26 @@ julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv.jl
 ```
 Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
+### Fashion-MNIST Example Using Convolutional Preprocessing and Data Augmentation
+
+To achieve maximum test accuracy, prepare the Fashion-MNIST dataset with data augmentation:
+
+```shell
+julia --project=. -O3 -t 32 examples/FashionMNIST/prepare_augmented_dataset.jl
+```
+
+Run the large model training example on Fashion-MNIST:
+
+```shell
+julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv_augmented.jl
+```
+Here, `32` should be replaced with the number of logical CPU cores on your machine.
+
 ### MNIST Example
 
-Run
+Run the MNIST training example:
+
 ```shell
-julia --project=. -O3 -t 32 mnist.jl
+julia --project=. -O3 -t 32 examples/MNIST/mnist.jl
 ```
-where `32` is the number of your logical CPU cores.
+Here, `32` should be replaced with the number of logical CPU cores on your machine.
