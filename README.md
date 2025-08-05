@@ -37,7 +37,7 @@ Prepare IMDb dataset:
 python examples/IMDb/prepare_dataset.py
 ```
 
-Run the IMDb training example:
+Run the IMDb training and benchmarking example:
 
 ```shell
 julia --project=. -O3 -t 32 examples/IMDb/imdb.jl
@@ -61,11 +61,12 @@ Here, `32` should be replaced with the number of logical CPU cores on your machi
 
 ### Fashion-MNIST Example Using Convolutional Preprocessing
 
-Run
+Run the Fashion-MNIST training example:
+
 ```shell
-julia --project=. -O3 -t 32 fmnist_conv.jl
+julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv.jl
 ```
-where `32` is the number of your logical CPU cores.
+Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
 ### MNIST Example
 
