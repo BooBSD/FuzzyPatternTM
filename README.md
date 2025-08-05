@@ -23,24 +23,54 @@ Please, see the comments.
 
 ## How to Run Examples
 
-0. Ensure that you have the latest version of the [Julia](https://julialang.org/downloads/) language installed.
-1. Some examples require dataset preparation scripts written in [Python](https://www.python.org/downloads/). To install the necessary dependencies, run:
+- Ensure that you have the latest version of the [Julia](https://julialang.org/downloads/) language installed.
+- Some examples require dataset preparation scripts written in [Python](https://www.python.org/downloads/). To install the necessary dependencies, run:
 ```shell
 pip install -r requirements.txt
 ```
 
-### MNIST Example
+### IMDb Example
 
-Run
+Prepare IMDb dataset:
+
 ```shell
-julia --project=. -O3 -t 32 mnist.jl
+python examples/IMDb/prepare_dataset.py
 ```
-where `32` is the number of your logical CPU cores.
+
+Run the IMDb training example:
+
+```shell
+julia --project=. -O3 -t 32 examples/IMDb/imdb.jl
+```
+Here, `32` should be replaced with the number of logical CPU cores on your machine.
+
+### Noisy Amazon Sales Example
+
+Prepare noisy Amazon Sales dataset:
+
+```shell
+python examples/AmazonSales/prepare_dataset.py --dataset_noise_ratio=0.005
+```
+
+Run the Noisy Amazon Sales training example:
+
+```shell
+julia --project=. -O3 -t 32 examples/IMDb/imdb.jl
+```
+Here, `32` should be replaced with the number of logical CPU cores on your machine.
 
 ### Fashion-MNIST Example Using Convolutional Preprocessing
 
 Run
 ```shell
 julia --project=. -O3 -t 32 fmnist_conv.jl
+```
+where `32` is the number of your logical CPU cores.
+
+### MNIST Example
+
+Run
+```shell
+julia --project=. -O3 -t 32 mnist.jl
 ```
 where `32` is the number of your logical CPU cores.
