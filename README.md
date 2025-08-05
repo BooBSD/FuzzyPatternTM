@@ -1,5 +1,7 @@
 # Fuzzy-Pattern Tsetlin Machine
 
+A paradigm shift in the Tsetlin-Machine family of algorithms.
+
 ## Abstract
 
 The "*all-or-nothing*" clause evaluation strategy is a core mechanism in the Tsetlin Machine (TM) family of algorithms. In this approach, each clause—a logical pattern composed of binary literals mapped to input data—is disqualified from voting if even a single literal fails. Due to this strict requirement, standard TMs must employ thousands of clauses to achieve competitive accuracy.
