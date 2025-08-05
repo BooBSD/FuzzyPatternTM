@@ -24,12 +24,6 @@ y_test::Vector{Bool} = Vector{Bool}(undef, length(test))
     y_test[i] = xy[length(xy)]
 end
 
-# CLAUSES = 1
-# T = 16
-# S = 1000
-# L = 128
-# LF = 128
-
 CLAUSES = 1
 T = 18
 S = 1000
@@ -37,18 +31,22 @@ L = 64
 LF = 64
 
 # CLAUSES = 100
-# T = 250  # 45, 250
+# T = 250
 # S = 2000
 # L = 100
 # LF = 10
 
-
 const EPOCHS = 1000
 const best_tms_size = 1
 
+# Training the TM model
 tm = TMClassifier{eltype(y_train)}(CLAUSES, T, S, L=L, LF=LF, states_num=256, include_limit=220)
 tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, best_tms_size=best_tms_size, shuffle=true, batch=true, verbose=1, best_tms_compile=true)
 
-# save(tms[1][1], "/tmp/tm.tm")
-# tm = load("/tmp/tm.tm")
-# benchmark(tm, x_test, y_test, 135)
+# Saving model
+save(tms[1][1], "/tmp/tm.tm")
+# Loading model
+tm = load("/tmp/tm.tm")
+# Benchmark model
+# 135 corresponds to a 5GB input dataset. Feel free to adjust this number if you like.
+benchmark(tm, x_test, y_test, 135)
