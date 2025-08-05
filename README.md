@@ -10,7 +10,7 @@ The proposed fuzzy mechanism significantly reduces the number of required clause
 
 Additional experiments on the *Fashion-MNIST* dataset with convolutional preprocessing yield similar results: **92.18%** test accuracy with only **2 clauses per class**, **93.19%** with 20 clauses per class, and **94.68%** with 8000 clauses per class. This demonstrates an approximate **400× reduction** in clause count compared to previous Composite TM approach, whose best performance was **93.00%** accuracy using a model with **8000** clauses per class. Finally, on the noisy *Amazon Sales* dataset (**20% noise**), FPTM achieves **85.22%** test accuracy, outperforming GraphTM (78.17%) and GraphCNN (66.23%).
 
-Here is the tiny **20-clause** model training result for the **MNIST** dataset:
+Here are the training results of the tiny **20-clause** model on the MNIST dataset:
 <img width="698" alt="Experimental Fuzzy Patterns Tsetlin Machine MNIST accuracy 98.56%" src="https://github.com/user-attachments/assets/05768a26-036a-40ce-b548-95925e96a01d">
 
 ## Changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
