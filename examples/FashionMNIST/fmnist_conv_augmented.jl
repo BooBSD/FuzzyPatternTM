@@ -1,4 +1,4 @@
-include("../../FuzzyPatternTM.jl")
+include("../../src/FuzzyPatternTM.jl")
 
 using Serialization
 using .FuzzyPatternTM: TMClassifier, train!

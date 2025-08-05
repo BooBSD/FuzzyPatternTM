@@ -1,5 +1,5 @@
-include("../../FuzzyPatternTM.jl")
-include("../../utils.jl")
+include("../../src/FuzzyPatternTM.jl")
+include("../../src/utils.jl")
 
 try
     using MLDatasets: FashionMNIST
