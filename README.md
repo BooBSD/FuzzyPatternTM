@@ -14,7 +14,7 @@ On the Amazon Sales dataset with **20% noise**, FPTM achieves **85.22%** accurac
 
 ## Changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl)
 
-  - New fuzzy clause evaluation algorithm
+  - New fuzzy clause evaluation algorithm.
   - New hyperparameter `LF` that sets the number of literal misses allowed for the clause. The special case `LF = 1` corresponds to the same internal logic used in the [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) library.
 
 The changes compared to [Tsetlin.jl](https://github.com/BooBSD/Tsetlin.jl) are located in the following functions: `check_clause()`, `feedback!()` and `train!()`.
