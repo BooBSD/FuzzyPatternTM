@@ -30,12 +30,6 @@ S = 1000
 L = 64
 LF = 64
 
-# CLAUSES = 100
-# T = 250
-# S = 2000
-# L = 100
-# LF = 10
-
 const EPOCHS = 1000
 const best_tms_size = 1
 
