@@ -24,13 +24,14 @@ y_test::Vector{Bool} = Vector{Bool}(undef, length(test))
     y_test[i] = xy[length(xy)]
 end
 
+# Optimal hyperparameters:
 CLAUSES = 200
 T = 32
 S = 2000
 L = 100
 LF = 10
 
-# Maximum accuracy after 15-20 epochs
+# Maximum accuracy after 15-20 epochs:
 # CLAUSES = 200
 # T = 250
 # S = 2000
