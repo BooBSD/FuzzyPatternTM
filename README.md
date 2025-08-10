@@ -34,7 +34,7 @@ pip install -r requirements.txt
 In *all* Julia examples, we use `-t 32`, which specifies the use of `32` logical CPU cores.
 Please adjust this parameter to match the actual number of logical cores available on your machine.
 
-### IMDb Example
+### IMDb Example (1 clause per class)
 
 Prepare IMDb dataset:
 
@@ -45,7 +45,21 @@ python examples/IMDb/prepare_dataset.py --max-ngram=4 --features=12800 --imdb-nu
 Run the IMDb training and benchmarking example:
 
 ```shell
-julia --project=. -O3 -t 32 examples/IMDb/imdb.jl
+julia --project=. -O3 -t 32 examples/IMDb/imdb_minimal.jl
+```
+
+### IMDb Example (200 clauses per class)
+
+Prepare IMDb dataset:
+
+```shell
+python examples/IMDb/prepare_dataset.py --max-ngram=4 --features=65535 --imdb-num-words=70000
+```
+
+Run the IMDb training and benchmarking example:
+
+```shell
+julia --project=. -O3 -t 32 examples/IMDb/imdb_optimal.jl
 ```
 
 ### Noisy Amazon Sales Example
