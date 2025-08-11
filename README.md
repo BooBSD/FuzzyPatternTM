@@ -1,6 +1,6 @@
 # Fuzzy-Pattern Tsetlin Machine
 
-A paradigm shift in the Tsetlin-Machine family of algorithms.
+A paradigm shift in the Tsetlin Machine family of algorithms.
 
 ## Abstract
 
