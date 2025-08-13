@@ -107,3 +107,23 @@ To run the MNIST inference benchmark, please use the following command:
 ```shell
 julia --project=. -O3 -t 32 examples/MNIST/mnist_benchmark_inference.jl
 ```
+
+## Citation
+
+If you use the Fuzzy-Pattern Tsetlin Machine in a scientific publication, please cite the following paper: [arXiv:2508.08350](https://arxiv.org/abs/2508.08350)
+
+#### BibTeX:
+```
+@article{hnilov2025fptm,
+    title={Fuzzy-Pattern Tsetlin Machine}, 
+    author={Artem Hnilov},
+    journal={arXiv preprint arXiv.2508.08350},
+    year={2025},
+    eprint={2508.08350},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG},
+    url={https://arxiv.org/abs/2508.08350},
+    doi = {10.48550/arXiv.2508.08350},
+}
+```
+
