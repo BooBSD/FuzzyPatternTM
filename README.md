@@ -32,7 +32,7 @@ Please adjust this parameter to match the actual number of logical cores availab
 
 ### IMDb Example (1 clause per class)
 
-Prepare IMDb dataset:
+Prepare the IMDb dataset:
 
 ```shell
 python examples/IMDb/prepare_dataset.py --max-ngram=4 --features=12800 --imdb-num-words=40000
@@ -46,7 +46,7 @@ julia --project=. -O3 -t 32 examples/IMDb/imdb_minimal.jl
 
 ### IMDb Example (200 clauses per class)
 
-Prepare IMDb dataset:
+Prepare the IMDb dataset:
 
 ```shell
 python examples/IMDb/prepare_dataset.py --max-ngram=4 --features=65535 --imdb-num-words=70000
@@ -60,7 +60,7 @@ julia --project=. -O3 -t 32 examples/IMDb/imdb_optimal.jl
 
 ### Noisy Amazon Sales Example
 
-Prepare noisy Amazon Sales dataset:
+Prepare the noisy Amazon Sales dataset:
 
 ```shell
 python examples/AmazonSales/prepare_dataset.py --dataset_noise_ratio=0.005
@@ -82,13 +82,13 @@ julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv.jl
 
 ### Fashion-MNIST Example Using Convolutional Preprocessing and Data Augmentation
 
-To achieve maximum test accuracy, prepare the Fashion-MNIST dataset with data augmentation:
+To achieve maximum test accuracy, apply data augmentation when preparing the Fashion-MNIST dataset:
 
 ```shell
 julia --project=. -O3 -t 32 examples/FashionMNIST/prepare_augmented_dataset.jl
 ```
 
-Run the large model training example on Fashion-MNIST:
+Run the example that trains a large model on Fashion-MNIST:
 
 ```shell
 julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv_augmented.jl
