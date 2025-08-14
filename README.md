@@ -94,6 +94,20 @@ Run the example that trains a large model on Fashion-MNIST:
 julia --project=. -O3 -t 32 examples/FashionMNIST/fmnist_conv_augmented.jl
 ```
 
+### CIFAR-10 Example Using Convolutional Preprocessing
+
+Prepare the CIFAR-10 dataset:
+
+```shell
+julia --project=. -O3 -t 32 examples/CIFAR10/prepare_dataset.jl
+```
+
+Run the CIFAR-10 training example:
+
+```shell
+julia --project=. -O3 -t 32 examples/CIFAR10/cifar10_conv.jl
+```
+
 ### MNIST Example
 
 Run the MNIST training example:
