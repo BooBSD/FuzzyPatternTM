@@ -25,38 +25,38 @@ x_test = [booleanize(x, 0, 0.25, 0.5, 0.75) for x in x_test]
 y_train = Int8.(y_train)
 y_test = Int8.(y_test)
 
-const CLAUSES = 20
-const T = 20
-const S = 200
-const L = 150
-const LF = 75
+CLAUSES = 20
+T = 20
+S = 200
+L = 150
+LF = 75
 
-# const CLAUSES = 200
-# const T = 20
-# const S = 200
-# const L = 16
-# const LF = 8
+# CLAUSES = 200
+# T = 20
+# S = 200
+# L = 16
+# LF = 8
 
-# const CLAUSES = 512
-# const T = 32
-# const S = 200
-# const L = 16
-# const LF = 8
+# CLAUSES = 512
+# T = 32
+# S = 200
+# L = 16
+# LF = 8
 
-# const CLAUSES = 2000
-# const T = 100
-# const S = 350
-# const L = 20
-# const LF = 10
+# CLAUSES = 2000
+# T = 100
+# S = 350
+# L = 20
+# LF = 10
 
-# const CLAUSES = 40
-# const T = 10
-# const S = 125
-# const L = 10
-# const LF = 5
+# CLAUSES = 40
+# T = 10
+# S = 125
+# L = 10
+# LF = 5
 
-const EPOCHS = 2000
-const best_tms_size = 512
+EPOCHS = 2000
+best_tms_size = 512
 
 # Training the TM model
 tm = TMClassifier{eltype(y_train)}(CLAUSES, T, S, L=L, LF=LF, states_num=256, include_limit=200)  # include_limit=200 instead of 128 but you can try different numbers.

@@ -268,4 +268,4 @@ EPOCHS = 1000
 
 # Training the TM model
 tm = TMClassifier{eltype(y_train)}(CLAUSES, T, S, L=L, LF=LF, states_num=256, include_limit=230)
-tms = train!(tm, X_train, y_train, X_test, y_test, EPOCHS, shuffle=true, verbose=1)
+tms = train!(tm, X_train, y_train, X_test, y_test, EPOCHS, best_tms_size=1, shuffle=true, verbose=1)

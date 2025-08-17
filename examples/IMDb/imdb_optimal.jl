@@ -38,9 +38,8 @@ LF = 10
 # L = 100
 # LF = 10
 
-const EPOCHS = 200  # 1000
-const best_tms_size = 1
+EPOCHS = 200
 
 # Training the TM model
 tm = TMClassifier{eltype(y_train)}(CLAUSES, T, S, L=L, LF=LF, states_num=256, include_limit=220)
-tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, best_tms_size=best_tms_size, shuffle=true, batch=true, best_tms_compile=true, verbose=1)
+tms = train!(tm, x_train, y_train, x_test, y_test, EPOCHS, best_tms_size=1, shuffle=true, batch=true, verbose=1)
