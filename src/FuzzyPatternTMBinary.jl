@@ -470,8 +470,8 @@ function compile(tm::TMClassifier; verbose::Int=0)::TMClassifierCompiled
             tmc.clauses.positive_included_literals[j] = [i for i = 1:ta.clause_size if c[i] >= ta.include_limit]
             tmc.clauses.positive_included_literals_inverted[j] = [i for i = 1:ta.clause_size if ci[i] >= ta.include_limit]
             if verbose > 0
-                append!(pos, length(tmc.clauses[cls].positive_included_literals[j]))
-                append!(pos_inv, length(tmc.clauses[cls].positive_included_literals_inverted[j]))
+                append!(pos, length(tmc.clauses.positive_included_literals[j]))
+                append!(pos_inv, length(tmc.clauses.positive_included_literals_inverted[j]))
             end
         end
         for (j, (c, ci)) in enumerate(zip(eachcol(ta.negative_clauses), eachcol(ta.negative_clauses_inverted)))
