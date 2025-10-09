@@ -359,12 +359,12 @@ function predict(tm::AbstractTMClassifier, X::Vector{TMInputBatch})::Vector
     thread_votes_pos = Vector{Vector{Int64}}(undef, Threads.nthreads())
     thread_votes_neg = Vector{Vector{Int64}}(undef, Threads.nthreads())
     thread_b = Vector{Vector{Int64}}(undef, Threads.nthreads())
-    for tid in 1:Threads.nthreads()
+    for tid in 1:Threads.nthreads(:default)
 #        thread_best_vote[tid], thread_best_cls[tid], thread_votes[tid] = predefine_batch_arrays(tm)
         thread_best_vote[tid], thread_votes_pos[tid], thread_votes_neg[tid], thread_b[tid] = predefine_batch_arrays(tm)
     end
     @threads for i in eachindex(X)
-        tid::Int64 = Threads.threadid()
+        tid::Int64 = Threads.threadid() - Threads.nthreads(:interactive)
 #        predicted[i] = predict(tm, X[i], thread_best_vote[tid], thread_best_cls[tid], thread_votes[tid])
         predicted[i] = predict(tm, X[i], thread_best_vote[tid], thread_votes_pos[tid], thread_votes_neg[tid], thread_b[tid])
     end
