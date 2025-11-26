@@ -406,17 +406,14 @@ function train!(tm::TMClassifier, X::Vector{TMInput}, Y::Vector; shuffle::Bool=t
     if isnothing(tm.clauses)
         initialize!(tm, X, Y)
     end
-    if shuffle
-        X, Y = unzip(Random.shuffle(collect(zip(X, Y))))
-    end
-    @threads for i in eachindex(Y)
+    @threads for i in ifelse(shuffle, randperm(length(Y)), eachindex(Y))
         train!(tm, X[i], Y[i], shuffle=shuffle)
     end
 end
 
 
-function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vector, y_test::Vector, epochs::Int64; batch::Bool=true, shuffle::Bool=true, verbose::Int=1, best_tms_size::Int64=16, best_tms_compile::Bool=true)::Vector{Tuple{AbstractTMClassifier, Float64}}
-    @assert best_tms_size in 1:2000
+function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vector, y_test::Vector, epochs::Int64; batch::Bool=true, shuffle::Bool=true, verbose::Int=1, best_tms_size::Int64=0, best_tms_compile::Bool=true)::Vector{Tuple{AbstractTMClassifier, Float64}}
+    @assert best_tms_size in 0:2000
     if batch
         x_test = batches(x_test)
     end
@@ -429,6 +426,7 @@ function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vect
         println("Classes: 2. Input vector size: $(length(x_train[1])) bits. Training dataset size: $(length(y_train)). Testing dataset size: $(length(y_test)).")
         println("Accuracy over $(epochs) epochs:\n")
     end
+    best_acc::Float64 = 0.0
     best_tms = Tuple{AbstractTMClassifier, Float64}[]
     all_time = @elapsed begin
         for i in 1:epochs
@@ -436,17 +434,20 @@ function train!(tm::TMClassifier, x_train::Vector, y_train::Vector, x_test::Vect
             testing_time = @elapsed begin
                 acc = accuracy(predict(tm, x_test), y_test)
             end
-            push!(best_tms, (best_tms_compile ? compile(tm, verbose=verbose - 1) : deepcopy(tm), acc))
-            sort!(best_tms, by=last, rev=true)
-            best_tms = best_tms[1:clamp(length(best_tms), length(best_tms), best_tms_size)]
+            best_acc = acc > best_acc ? acc : best_acc
+            if best_tms_size > 0
+                push!(best_tms, (best_tms_compile ? compile(tm, verbose=verbose - 1) : deepcopy(tm), acc))
+                sort!(best_tms, by=last, rev=true)
+                best_tms = best_tms[1:clamp(length(best_tms), length(best_tms), best_tms_size)]
+            end
             if verbose > 0
-                @printf("#%s  Accuracy: %.2f%%  Best: %.2f%%  Training: %.3fs  Testing: %.3fs\n", i, acc * 100, best_tms[1][2] * 100, training_time, testing_time)
+                @printf("#%s  Accuracy: %.2f%%  Best: %.2f%%  Training: %.3fs  Testing: %.3fs\n", i, acc * 100, best_acc * 100, training_time, testing_time)
             end
         end
     end
     if verbose > 0
         elapsed = Time(0) + Second(floor(Int, all_time))
-        @printf("\n%s epochs done in %s. Best accuracy: %.2f%%.\n", epochs, elapsed, best_tms[1][2] * 100)
+        @printf("\n%s epochs done in %s. Best accuracy: %.2f%%.\n", epochs, elapsed, best_acc * 100)
         println("Clauses: $(tm.clauses_num), T: $(tm.T), S: $(tm.S) (s: $(tm.s)), L: $(tm.L), LF: $(tm.LF), states_num: $(tm.state_max + 1), include_limit: $(tm.include_limit).")
         println("Classes: 2. Input vector size: $(length(x_train[1])) bits. Training dataset size: $(length(y_train)). Testing dataset size: $(length(y_test)).\n")
     end
