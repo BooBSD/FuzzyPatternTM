@@ -1,5 +1,6 @@
 include("../../src/FuzzyPatternTM.jl")
 
+
 try
     using MLDatasets: MNIST, FashionMNIST
 catch LoadError
@@ -44,10 +45,10 @@ LF = 75
 # LF = 8
 
 # CLAUSES = 2000
-# T = 100
-# S = 350
-# L = 20
-# LF = 10
+# T = 64
+# S = 400
+# L = 12
+# LF = 4
 
 # CLAUSES = 40
 # T = 10
@@ -55,7 +56,7 @@ LF = 75
 # L = 10
 # LF = 5
 
-EPOCHS = 2000
+EPOCHS = 1000
 best_tms_size = 512
 
 # Training the TM model
